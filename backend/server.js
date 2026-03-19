@@ -1,6 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const pool = require("./config/db");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 
@@ -9,6 +12,18 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+// Auto-initialize DB tables on startup
+async function initDB() {
+  try {
+    const schema = fs.readFileSync(path.join(__dirname, "db/schema.sql"), "utf8");
+    await pool.query(schema);
+    console.log("✅ Database tables ready");
+  } catch (err) {
+    console.error("⚠️ DB init warning:", err.message);
+  }
+}
+initDB();
 
 // TEST
 app.get("/test",(req,res)=>{
