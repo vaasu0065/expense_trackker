@@ -2,70 +2,81 @@ import { useState, useEffect } from "react";
 import api from "../api";
 import { Pie, Bar } from "react-chartjs-2";
 import "chart.js/auto";
+import { CHART_COLORS } from "../constants";
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: {
+    legend: { position: "bottom" },
+  },
+};
 
 export default function Charts({ selectedDate }) {
   const [chart, setChart] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const res = await api.get("/expenses/daily", {
-          params: { date: selectedDate }
-        });
-
-        setChart(res.data);
+        const res = await api.get("/expenses/daily", { params: { date: selectedDate } });
+        if (!cancelled) setChart(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.log(err);
+        if (!cancelled) setChart([]);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
-  }, [selectedDate]);   // ✅ Correct dependency → No ESLint warning
+    return () => { cancelled = true; };
+  }, [selectedDate]);
+
+  const colors = chart.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
   const pieData = {
-    labels: chart.map(x => x.category),
+    labels: chart.map((x) => x.category),
     datasets: [
       {
-        data: chart.map(x => x.total),
-        backgroundColor: [
-          "#ff6384",
-          "#36a2eb",
-          "#ffce56",
-          "#4bc0c0",
-          "#9966ff",
-          "#ff9f40"
-        ]
-      }
-    ]
+        data: chart.map((x) => parseFloat(x.total) || 0),
+        backgroundColor: colors,
+        borderWidth: 0,
+      },
+    ],
   };
 
   const barData = {
-    labels: chart.map(x => x.category),
+    labels: chart.map((x) => x.category),
     datasets: [
       {
-        label: "Expenses",
-        data: chart.map(x => x.total),
-        backgroundColor: "#36a2eb"
-      }
-    ]
+        label: "Amount (₹)",
+        data: chart.map((x) => parseFloat(x.total) || 0),
+        backgroundColor: colors,
+        borderRadius: 8,
+      },
+    ],
   };
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold mb-3">Expense Charts</h3>
+    <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6">
+      <h3 className="text-lg font-semibold text-slate-800 mb-4">Expense breakdown</h3>
 
-      {chart.length > 0 ? (
-        <>
-          <div className="w-1/3 mx-auto">
-            <Pie data={pieData} />
-          </div>
-
-          <div className="mt-6">
-            <Bar data={barData} />
-          </div>
-        </>
+      {loading ? (
+        <div className="h-64 flex items-center justify-center text-slate-500">Loading…</div>
+      ) : chart.length === 0 ? (
+        <div className="h-64 flex items-center justify-center text-slate-500">
+          No data for this period
+        </div>
       ) : (
-        <p>No data found for this date</p>
+        <div className="space-y-6">
+          <div className="max-w-xs mx-auto">
+            <Pie data={pieData} options={chartOptions} />
+          </div>
+          <div className="h-64">
+            <Bar data={barData} options={{ ...chartOptions, indexAxis: "y" }} />
+          </div>
+        </div>
       )}
     </div>
   );

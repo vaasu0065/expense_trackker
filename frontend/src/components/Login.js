@@ -9,38 +9,57 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
-  const login = async () => {
-    if (!email || !password) {
+  const login = async (isRetry = false) => {
+    if (!email?.trim() || !password) {
       showToast("Please fill in all fields", "error");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      
-      // Get user name from response
-      const userName = res.data.user?.name || "User";
-      
-      showToast(`Welcome back, ${userName}! 🎉`, "success");
-      
-      // Redirect after showing toast
+      const res = await api.post("/auth/login", { email: email.trim(), password });
+      const token = res.data?.token;
+      if (!token) {
+        showToast("Invalid response from server", "error");
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem("token", token);
+      const userName = res.data?.user?.name || "User";
+      showToast(`Welcome back, ${userName}!`, "success");
       setTimeout(() => {
-        window.location = "/";
-      }, 1500);
+        window.location.href = "/";
+      }, 1200);
     } catch (err) {
-      console.error(err);
-      const errorMsg = err.response?.data?.msg || "Login Failed";
-      showToast(errorMsg, "error");
+      // Network error (backend not reachable) – e.g. Render free tier sleeping
+      if (!err.response) {
+        const base = process.env.REACT_APP_API_URL || "http://localhost:4000";
+        const isRender = base.includes("onrender.com");
+
+        if (isRender && !isRetry) {
+          showToast("Server may be waking up (free tier). Retrying in 10 seconds…", "info", 12000);
+          setLoading(false);
+          setTimeout(() => login(true), 10000);
+          return;
+        }
+
+        showToast(`Cannot connect to server. Is the backend running at ${base}?`, "error", 6000);
+        setLoading(false);
+        console.error("Login network error:", err.message);
+        return;
+      }
       setLoading(false);
+      const msg = err.response?.data?.msg || `Login failed (${err.response?.status || "error"})`;
+      const needsVerification = err.response?.data?.needsVerification;
+      showToast(msg, "error", needsVerification ? 6000 : 4000);
+      if (needsVerification && err.response?.data?.email) {
+        console.log("User needs to verify email:", err.response.data.email);
+      }
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      login();
-    }
+    if (e.key === "Enter") login();
   };
 
   return (
@@ -53,100 +72,83 @@ export default function Login() {
           duration={toast.duration}
         />
       )}
-      
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Login Card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
-            {/* Header */}
+          <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-8 space-y-6">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-500 text-white text-2xl font-bold shadow-card mb-4">
+                ₹
               </div>
-              <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
-              <p className="text-gray-500 mt-2">Sign in to your account</p>
+              <h1 className="text-2xl font-bold text-slate-800">Welcome back</h1>
+              <p className="text-slate-500 mt-1">Sign in to your account</p>
             </div>
 
-            {/* Form */}
             <div className="space-y-4">
-              {/* Email Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Email
                 </label>
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
                 />
               </div>
-
-              {/* Password Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Password
+                  </label>
+                  <a
+                    href="/forgot-password"
+                    className="text-xs text-primary-600 hover:text-primary-700 hover:underline font-medium"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
                 <input
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
                 />
               </div>
-
-              {/* Login Button */}
               <button
                 onClick={login}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-card hover:shadow-card-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? "Signing in…" : "Sign in"}
               </button>
             </div>
 
-            {/* Divider */}
-            <div className="relative">
+            <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Don't have an account?
-                </span>
+                <span className="px-2 bg-white text-slate-500">Don't have an account?</span>
               </div>
             </div>
 
-            {/* Register Link */}
             <div className="text-center">
               <a
                 href="/register"
-                className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+                className="text-primary-600 hover:text-primary-700 font-medium hover:underline"
               >
                 Create an account
               </a>
             </div>
           </div>
 
-          {/* Footer */}
-          <p className="text-center text-gray-500 text-sm mt-6">
-            Secure expense tracking for your financial goals
+          <p className="text-center text-slate-500 text-sm mt-6">
+            Track expenses and stay on budget
           </p>
         </div>
       </div>

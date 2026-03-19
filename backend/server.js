@@ -4,7 +4,10 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  credentials: true,
+}));
 app.use(express.json());
 
 // TEST
@@ -14,7 +17,6 @@ app.get("/test",(req,res)=>{
 
 // ROUTES
 app.use("/auth", require("./routes/authRoutes"));
-app.use("/otp", require("./routes/otpRoutes"));
 app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
 

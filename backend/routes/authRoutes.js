@@ -4,52 +4,63 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const auth = require("../middleware/authMiddleware");
 
-// REGISTER USER (Deprecated - Use OTP flow instead)
+// REGISTER USER (no OTP – direct signup)
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if(!name || !email || !password){
+    if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({ msg: "All fields required" });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ msg: "Password must be at least 6 characters" });
+    }
+
     const userExists = await pool.query(
-      "SELECT * FROM users WHERE email=$1",
+      "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
       [email]
     );
 
     if (userExists.rowCount > 0) {
-      return res.status(400).json({ msg: "User already exists" });
+      return res.status(400).json({ msg: "User already exists with this email" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert user & return ID
     const result = await pool.query(
-      "INSERT INTO users(name,email,password,is_verified) VALUES($1,$2,$3,$4) RETURNING id",
-      [name, email, hashedPassword, true] // Set verified true for backward compatibility
+      "INSERT INTO users(name,email,password,is_verified) VALUES($1,$2,$3,$4) RETURNING id, name, email",
+      [name.trim(), email.trim(), hashedPassword, true]
     );
 
     const userId = result.rows[0].id;
+    const userName = result.rows[0].name;
 
-    // CREATE USER SPECIFIC EXPENSE TABLE
-    const tableName = `expenses_user_${userId}`;
+    // Expense table name must match expenseController ensureTable format
+    const sanitizedName = userName
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+    const tableName = `expenses_${sanitizedName}_${userId}`;
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ${tableName} (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255),
-        amount NUMERIC,
-        category VARCHAR(255),
-        date DATE DEFAULT CURRENT_DATE
-      )
-    `);
+    if (/^expenses_[a-z0-9_]+_\d+$/.test(tableName)) {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS ${tableName} (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255),
+          amount NUMERIC,
+          category VARCHAR(255),
+          date DATE DEFAULT CURRENT_DATE
+        )
+      `);
+    }
 
-    res.json({ msg: "User Registered Successfully + Table Created" });
-
+    res.json({
+      msg: "Account created. Please sign in.",
+      user: { id: userId, name: userName, email: result.rows[0].email },
+    });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ msg: "Server Error" });
+    console.error("Register error:", err);
+    res.status(500).json({ msg: "Server error" });
   }
 });
 
@@ -57,32 +68,32 @@ router.post("/register", async (req, res) => {
 // LOGIN USER
 router.post("/login", async (req, res) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not set in .env");
+      return res.status(500).json({ msg: "Server misconfigured. Contact administrator." });
+    }
+
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
+
     const result = await pool.query(
-      "SELECT * FROM users WHERE email=$1",
+      "SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
       [email]
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ msg: "User not found" });
+      return res.status(401).json({ msg: "User not found. Check email or register first." });
     }
 
     const user = result.rows[0];
 
-    // Check if user is verified
-    if (!user.is_verified) {
-      return res.status(403).json({ 
-        msg: "Please verify your email before logging in",
-        needsVerification: true,
-        email: user.email
-      });
-    }
-
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return res.status(400).json({ msg: "Wrong password" });
+      return res.status(401).json({ msg: "Wrong password" });
     }
 
     const token = jwt.sign(
@@ -90,8 +101,8 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    res.json({ 
-      msg: "Login Success", 
+    res.json({
+      msg: "Login Success",
       token,
       user: {
         id: user.id,
@@ -101,8 +112,11 @@ router.post("/login", async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ msg: "Server Error" });
+    console.error("Login error:", err);
+    res.status(500).json({
+      msg: "Server error",
+      ...(process.env.NODE_ENV !== "production" && { details: err.message })
+    });
   }
 });
 
@@ -120,6 +134,63 @@ router.get("/me", auth, async (req, res)=>{
   } catch(err){
     console.log(err);
     res.status(500).json({ msg:"Server Error" });
+  }
+});
+
+// FORGOT PASSWORD – verify email exists
+router.post("/forgot-password/verify-email", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email?.trim()) return res.status(400).json({ msg: "Email is required" });
+
+    const result = await pool.query(
+      "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
+      [email.trim()]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ msg: "No account found with this email" });
+    }
+
+    res.json({ msg: "Email verified", email: email.trim() });
+  } catch (err) {
+    console.error("Verify email error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+// RESET PASSWORD
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email?.trim() || !newPassword) {
+      return res.status(400).json({ msg: "Email and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ msg: "Password must be at least 6 characters" });
+    }
+
+    const userResult = await pool.query(
+      "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
+      [email.trim()]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ msg: "No account found with this email" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      "UPDATE users SET password = $1 WHERE LOWER(TRIM(email)) = LOWER(TRIM($2))",
+      [hashedPassword, email.trim()]
+    );
+
+    res.json({ msg: "Password updated successfully" });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ msg: "Server error" });
   }
 });
 

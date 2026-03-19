@@ -8,6 +8,7 @@ const {
   deleteExpense,
   updateExpense,
   filterExpenses,
+  getCategories,
   exportCSV,
   exportExcel,
   dailyStats
@@ -23,6 +24,7 @@ router.get("/summary", auth, summary);
 router.delete("/:id", auth, deleteExpense);
 router.put("/:id", auth, updateExpense);
 router.get("/filter", auth, filterExpenses);
+router.get("/categories", auth, getCategories);
 router.post("/budget", auth, setBudget);
 router.get("/budget", auth, getBudget);
 

@@ -1,96 +1,109 @@
 import { useState, useEffect, useCallback } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "./Navbar";
 import api from "../api";
 import { Pie, Bar } from "react-chartjs-2";
 import "chart.js/auto";
+import { CHART_COLORS } from "../constants";
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: { legend: { position: "bottom" } },
+};
 
 export default function Statistics() {
-
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-
   const [chart, setChart] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Wrap load in useCallback
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await api.get("/expenses/daily", {
-        params: { date: selectedDate }
+        params: { date: selectedDate },
       });
-      setChart(res.data);
+      setChart(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.log(err);
+      setChart([]);
+    } finally {
+      setLoading(false);
     }
   }, [selectedDate]);
 
   useEffect(() => {
     load();
-  }, [load]);   // ✅ No warning now
+  }, [load]);
 
+  const colors = chart.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
   const pieData = {
-    labels: chart.map(x => x.category),
+    labels: chart.map((x) => x.category),
     datasets: [
       {
-        data: chart.map(x => x.total),
-        backgroundColor: [
-          "#ff6384",
-          "#36a2eb",
-          "#ffce56",
-          "#4bc0c0",
-          "#9966ff",
-          "#ff9f40"
-        ]
-      }
-    ]
+        data: chart.map((x) => parseFloat(x.total) || 0),
+        backgroundColor: colors,
+        borderWidth: 0,
+      },
+    ],
   };
-
   const barData = {
-    labels: chart.map(x => x.category),
+    labels: chart.map((x) => x.category),
     datasets: [
       {
-        label: "Expenses",
-        data: chart.map(x => x.total),
-        backgroundColor: "#36a2eb"
-      }
-    ]
+        label: "Amount (₹)",
+        data: chart.map((x) => parseFloat(x.total) || 0),
+        backgroundColor: colors,
+        borderRadius: 8,
+      },
+    ],
   };
 
   return (
     <>
       <Navbar />
 
-      <div className="p-8 bg-gray-100 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">Daily Statistics</h1>
+      <div className="min-h-screen bg-surface-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <header className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
+              Statistics
+            </h1>
+            <p className="mt-1 text-slate-500">Daily expense breakdown by category</p>
+          </header>
 
-        {/* DATE PICKER */}
-        <div className="mb-6">
-          <label className="font-semibold mr-3">Select Date:</label>
-          <input
-            type="date"
-            className="border p-2 rounded"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-        </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Select date</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
-        {/* CHARTS */}
-        <div className="bg-white p-6 rounded shadow">
-          <h3 className="text-xl font-semibold mb-3">Expense Charts</h3>
+          <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Expense charts</h2>
 
-          {chart.length > 0 ? (
-            <>
-              <div className="w-1/3 mx-auto">
-                <Pie data={pieData} />
+            {loading ? (
+              <div className="h-64 flex items-center justify-center text-slate-500">
+                Loading…
               </div>
-
-              <div className="mt-8">
-                <Bar data={barData} />
+            ) : chart.length === 0 ? (
+              <div className="py-12 text-center text-slate-500">
+                No expenses for this date. Add some from the dashboard.
               </div>
-            </>
-          ) : (
-            <p>No Expenses Found for this Date</p>
-          )}
+            ) : (
+              <div className="space-y-8">
+                <div className="max-w-sm mx-auto">
+                  <Pie data={pieData} options={chartOptions} />
+                </div>
+                <div className="h-72">
+                  <Bar data={barData} options={chartOptions} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
