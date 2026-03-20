@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
+import useAutoRefresh from "../hooks/useAutoRefresh";
 
 const today = () => new Date().toISOString().split("T")[0];
 
@@ -54,6 +55,8 @@ export default function LendBorrow() {
   }, [filterType, filterStatus, showToast]);
 
   useEffect(() => { load(); loadSummary(); }, [load, loadSummary]);
+
+  useAutoRefresh(load);
 
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 

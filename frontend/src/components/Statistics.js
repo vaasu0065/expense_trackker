@@ -4,6 +4,7 @@ import api from "../api";
 import { Pie, Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import { CHART_COLORS } from "../constants";
+import useAutoRefresh from "../hooks/useAutoRefresh";
 
 const chartOptions = {
   responsive: true,
@@ -35,6 +36,8 @@ export default function Statistics() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useAutoRefresh(load);
 
   const colors = chart.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
   const pieData = {

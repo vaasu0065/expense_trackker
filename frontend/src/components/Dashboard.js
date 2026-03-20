@@ -5,6 +5,7 @@ import ExpenseList from "./ExpenseList";
 import AddExpense from "./AddExpense";
 import Charts from "./Charts";
 import Budget from "./Budget";
+import useAutoRefresh from "../hooks/useAutoRefresh";
 
 function formatCurrency(n) {
   const num = parseFloat(n) || 0;
@@ -69,6 +70,8 @@ export default function Dashboard() {
     loadBudgetStatus();
     setRefreshKey((k) => k + 1);
   }, [loadSummary, loadMonthlyTotal, loadBudgetStatus]);
+
+  useAutoRefresh(refreshAll);
 
   const monthName = new Date(currentYear, currentMonth - 1).toLocaleString("en", {
     month: "long",
