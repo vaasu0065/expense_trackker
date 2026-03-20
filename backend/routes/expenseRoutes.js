@@ -11,7 +11,8 @@ const {
   getCategories,
   exportCSV,
   exportExcel,
-  dailyStats
+  dailyStats,
+  dailyTotals
 } = require("../controllers/expenseController");
 const { setBudget, getBudget } = require("../controllers/budgetController");
 
@@ -31,6 +32,7 @@ router.get("/budget", auth, getBudget);
 router.get("/export/csv", auth, exportCSV);
 router.get("/export/excel", auth, exportExcel);
 router.get("/daily", auth, dailyStats);
+router.get("/daily-totals", auth, dailyTotals);
 
 
 module.exports = router;

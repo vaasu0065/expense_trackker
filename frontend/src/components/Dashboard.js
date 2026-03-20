@@ -196,7 +196,7 @@ export default function Dashboard() {
             </section>
 
             <section>
-              <Charts selectedDate={selectedDate} />
+              <Charts />
             </section>
           </div>
         </div>

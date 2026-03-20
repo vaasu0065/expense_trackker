@@ -132,7 +132,7 @@ exports.monthlyStats = async (req, res) => {
   }
 };
 
-/* DAILY STATS */
+/* DAILY STATS (by category for a single date) */
 exports.dailyStats = async (req, res) => {
   try {
     const table = await ensureTable(req.user.id);
@@ -142,6 +142,29 @@ exports.dailyStats = async (req, res) => {
     const result = await pool.query(
       `SELECT category, SUM(amount) AS total FROM ${table} WHERE date = $1 GROUP BY category`,
       [date]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server Error" });
+  }
+};
+
+/* DAILY TOTALS (total spend per day for a given month/year) */
+exports.dailyTotals = async (req, res) => {
+  try {
+    const table = await ensureTable(req.user.id);
+    const month = req.query.month || new Date().getMonth() + 1;
+    const year  = req.query.year  || new Date().getFullYear();
+
+    const result = await pool.query(
+      `SELECT date::text, SUM(amount) AS total
+       FROM ${table}
+       WHERE EXTRACT(MONTH FROM date) = $1
+         AND EXTRACT(YEAR  FROM date) = $2
+       GROUP BY date
+       ORDER BY date ASC`,
+      [month, year]
     );
     res.json(result.rows);
   } catch (err) {
