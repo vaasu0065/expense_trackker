@@ -34,6 +34,7 @@ app.get("/test",(req,res)=>{
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
+app.use("/lendborrow", require("./routes/lendBorrowRoutes"));
 
 app.listen(process.env.PORT || 4000, () =>
   console.log("Server running on", process.env.PORT)

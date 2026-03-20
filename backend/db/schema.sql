@@ -29,5 +29,16 @@ CREATE TABLE IF NOT EXISTS budget (
   UNIQUE(user_id, month, year)
 );
 
--- Note: User-specific expense tables are created dynamically
--- Format: expenses_{sanitized_username}_{user_id}
+-- Create lend_borrow table
+CREATE TABLE IF NOT EXISTS lend_borrow (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('lend', 'borrow')),
+  person_name VARCHAR(255) NOT NULL,
+  amount NUMERIC NOT NULL,
+  note TEXT DEFAULT '',
+  date DATE DEFAULT CURRENT_DATE,
+  due_date DATE,
+  status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('pending', 'settled')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

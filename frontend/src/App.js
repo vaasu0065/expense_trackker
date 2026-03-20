@@ -4,23 +4,19 @@ import Register from "./components/Register";
 import ForgotPassword from "./components/ForgotPassword";
 import Dashboard from "./components/Dashboard";
 import Statistics from "./components/Statistics";
+import LendBorrow from "./components/LendBorrow";
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("token");
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-      />
+      <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route
-        path="/stats"
-        element={isLoggedIn ? <Statistics /> : <Navigate to="/login" />}
-      />
+      <Route path="/stats" element={isLoggedIn ? <Statistics /> : <Navigate to="/login" />} />
+      <Route path="/lendborrow" element={isLoggedIn ? <LendBorrow /> : <Navigate to="/login" />} />
     </Routes>
   );
 }

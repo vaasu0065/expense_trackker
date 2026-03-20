@@ -68,6 +68,16 @@ export default function Navbar() {
             >
               Statistics
             </Link>
+            <Link
+              to="/lendborrow"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/lendborrow"
+                  ? "bg-primary-100 text-primary-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+              }`}
+            >
+              Lend & Borrow
+            </Link>
             {user && (
               <span className="ml-2 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium">
                 {user.name}
@@ -107,6 +117,9 @@ export default function Navbar() {
               </Link>
               <Link to="/stats" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
                 Statistics
+              </Link>
+              <Link to="/lendborrow" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
+                Lend & Borrow
               </Link>
               {user && (
                 <div className="px-4 py-2 text-slate-500 text-sm">Signed in as {user.name}</div>
