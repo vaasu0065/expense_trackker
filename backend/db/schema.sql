@@ -17,6 +17,59 @@ CREATE TABLE IF NOT EXISTS otp_verification (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create password reset code table
+CREATE TABLE IF NOT EXISTS password_reset_codes (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  code_hash VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create imported transaction ledger table
+CREATE TABLE IF NOT EXISTS imported_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('credit', 'debit')),
+  title VARCHAR(255) NOT NULL,
+  amount NUMERIC NOT NULL,
+  category VARCHAR(255) DEFAULT 'Other',
+  date DATE DEFAULT CURRENT_DATE,
+  time VARCHAR(10) DEFAULT '',
+  source TEXT DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create bank connection table for Account Aggregator / Open Banking providers
+CREATE TABLE IF NOT EXISTS bank_connections (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  provider VARCHAR(50) NOT NULL DEFAULT 'mock',
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'revoked', 'failed')),
+  consent_id VARCHAR(255),
+  account_mask VARCHAR(50),
+  last_synced_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Store provider transaction ids so repeated syncs do not duplicate imports
+CREATE TABLE IF NOT EXISTS bank_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  connection_id INTEGER REFERENCES bank_connections(id) ON DELETE CASCADE,
+  provider_transaction_id VARCHAR(255) NOT NULL,
+  type VARCHAR(10) NOT NULL CHECK (type IN ('credit', 'debit')),
+  title VARCHAR(255) NOT NULL,
+  amount NUMERIC NOT NULL,
+  category VARCHAR(255) DEFAULT 'Other',
+  date DATE DEFAULT CURRENT_DATE,
+  time VARCHAR(10) DEFAULT '',
+  raw JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, provider_transaction_id)
+);
+
 -- Create budget table
 CREATE TABLE IF NOT EXISTS budget (
   id SERIAL PRIMARY KEY,

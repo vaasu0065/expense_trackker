@@ -27,7 +27,8 @@ initDB();
 
 // TEST
 app.get("/test",(req,res)=>{
-  res.send("Backend Running OK");
+  console.log('/test route hit', { headers: req.headers });
+  res.json({ msg: "Backend Running OK" });
 });
 
 // ROUTES
@@ -35,7 +36,12 @@ app.use("/auth", require("./routes/authRoutes"));
 app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
 app.use("/lendborrow", require("./routes/lendBorrowRoutes"));
+app.use("/bank", require("./routes/bankRoutes"));
 
-app.listen(process.env.PORT || 4000, () =>
-  console.log("Server running on", process.env.PORT)
-);
+if (require.main === module) {
+  app.listen(process.env.PORT || 5001, () =>
+    console.log("Server running on", process.env.PORT || 5001)
+  );
+}
+
+module.exports = app;

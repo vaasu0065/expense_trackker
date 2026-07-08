@@ -2,7 +2,67 @@ const router = require("express").Router();
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const auth = require("../middleware/authMiddleware");
+
+const normalizeEmail = (email) => email.trim().toLowerCase();
+const resetCodeTtlMinutes = 10;
+
+function createResetCode() {
+  return crypto.randomInt(100000, 1000000).toString();
+}
+
+function hashResetCode(email, code) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is required for reset codes");
+  }
+
+  return crypto
+    .createHash("sha256")
+    .update(`${normalizeEmail(email)}:${code}:${process.env.JWT_SECRET}`)
+    .digest("hex");
+}
+
+function emailIsConfigured() {
+  return Boolean(
+    process.env.EMAIL_HOST &&
+      process.env.EMAIL_USER &&
+      process.env.EMAIL_PASSWORD
+  );
+}
+
+async function sendPasswordResetEmail(email, code) {
+  if (!emailIsConfigured()) {
+    console.log(`Password reset code for ${email}: ${code}`);
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT || "587", 10),
+    secure: process.env.EMAIL_PORT === "465",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: email,
+    subject: "Expense Tracker password reset code",
+    text: `Your password reset code is ${code}. It expires in ${resetCodeTtlMinutes} minutes.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Password reset</h2>
+        <p>Use this code to reset your Expense Tracker password:</p>
+        <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px;">${code}</p>
+        <p>This code expires in ${resetCodeTtlMinutes} minutes.</p>
+      </div>
+    `,
+  });
+}
 
 // REGISTER USER (no OTP – direct signup)
 router.post("/register", async (req, res) => {
@@ -137,24 +197,45 @@ router.get("/me", auth, async (req, res)=>{
   }
 });
 
-// FORGOT PASSWORD – verify email exists
+// FORGOT PASSWORD – send one-time reset code
 router.post("/forgot-password/verify-email", async (req, res) => {
   try {
     const { email } = req.body;
     if (!email?.trim()) return res.status(400).json({ msg: "Email is required" });
 
+    const normalizedEmail = normalizeEmail(email);
     const result = await pool.query(
       "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
-      [email.trim()]
+      [normalizedEmail]
     );
 
     if (result.rowCount === 0) {
       return res.status(404).json({ msg: "No account found with this email" });
     }
 
-    res.json({ msg: "Email verified", email: email.trim() });
+    const code = createResetCode();
+    const codeHash = hashResetCode(normalizedEmail, code);
+
+    await pool.query(
+      "DELETE FROM password_reset_codes WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
+      [normalizedEmail]
+    );
+    await pool.query(
+      `INSERT INTO password_reset_codes(email, code_hash, expires_at)
+       VALUES($1, $2, NOW() + ($3::text || ' minutes')::interval)`,
+      [normalizedEmail, codeHash, resetCodeTtlMinutes]
+    );
+
+    await sendPasswordResetEmail(normalizedEmail, code);
+
+    res.json({
+      msg: emailIsConfigured()
+        ? "Reset code sent to your email"
+        : "Reset code generated. Check the backend console.",
+      email: normalizedEmail,
+    });
   } catch (err) {
-    console.error("Verify email error:", err);
+    console.error("Send reset code error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
@@ -162,29 +243,49 @@ router.post("/forgot-password/verify-email", async (req, res) => {
 // RESET PASSWORD
 router.post("/reset-password", async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { email, resetCode, newPassword } = req.body;
 
-    if (!email?.trim() || !newPassword) {
-      return res.status(400).json({ msg: "Email and new password are required" });
+    if (!email?.trim() || !resetCode?.trim() || !newPassword) {
+      return res.status(400).json({ msg: "Email, reset code and new password are required" });
     }
 
     if (newPassword.length < 6) {
       return res.status(400).json({ msg: "Password must be at least 6 characters" });
     }
 
+    const normalizedEmail = normalizeEmail(email);
+    const codeHash = hashResetCode(normalizedEmail, resetCode.trim());
     const userResult = await pool.query(
       "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
-      [email.trim()]
+      [normalizedEmail]
     );
 
     if (userResult.rowCount === 0) {
       return res.status(404).json({ msg: "No account found with this email" });
     }
 
+    const codeResult = await pool.query(
+      `SELECT id FROM password_reset_codes
+       WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+         AND code_hash = $2
+         AND expires_at > NOW()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [normalizedEmail, codeHash]
+    );
+
+    if (codeResult.rowCount === 0) {
+      return res.status(400).json({ msg: "Invalid or expired reset code" });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.query(
       "UPDATE users SET password = $1 WHERE LOWER(TRIM(email)) = LOWER(TRIM($2))",
-      [hashedPassword, email.trim()]
+      [hashedPassword, normalizedEmail]
+    );
+    await pool.query(
+      "DELETE FROM password_reset_codes WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
+      [normalizedEmail]
     );
 
     res.json({ msg: "Password updated successfully" });

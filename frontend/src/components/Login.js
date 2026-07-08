@@ -33,7 +33,7 @@ export default function Login() {
     } catch (err) {
       // Network error (backend not reachable) – e.g. Render free tier sleeping
       if (!err.response) {
-        const base = process.env.REACT_APP_API_URL || "http://localhost:4000";
+        const base = process.env.REACT_APP_API_URL || "http://localhost:5001";
         const isRender = base.includes("onrender.com");
 
         if (isRender && !isRetry) {

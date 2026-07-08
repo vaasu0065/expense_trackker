@@ -1,6 +1,24 @@
 const pool = require("../config/db");
 const { Parser } = require("json2csv");
 const ExcelJS = require("exceljs");
+const { parseTransactionMessage } = require("../utils/transactionParser");
+
+const ensureTransactionTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS imported_transactions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      type VARCHAR(10) NOT NULL CHECK (type IN ('credit', 'debit')),
+      title VARCHAR(255) NOT NULL,
+      amount NUMERIC NOT NULL,
+      category VARCHAR(255) DEFAULT 'Other',
+      date DATE DEFAULT CURRENT_DATE,
+      time VARCHAR(10) DEFAULT '',
+      source TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+};
 
 // Ensure table exists and has all required columns
 const ensureTable = async (userId) => {
@@ -30,6 +48,72 @@ const ensureTable = async (userId) => {
   return table;
 };
 
+async function saveImportedTransactions(userId, transactions) {
+  const table = await ensureTable(userId);
+  await ensureTransactionTable();
+
+  const validTransactions = [];
+  const debitExpenses = [];
+  for (const item of transactions) {
+    const type = item.type === "credit" ? "credit" : "debit";
+    const title = String(item.title || "").trim();
+    const amount = parseFloat(item.amount);
+    const category = String(item.category || "Other").trim();
+    const date = String(item.date || "").trim();
+    const time = String(item.time || "").trim();
+    const source = String(item.source || "").trim();
+
+    if (!title || !date || !Number.isFinite(amount) || amount <= 0) {
+      const err = new Error("Each transaction needs title, amount and date");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    validTransactions.push([userId, type, title, amount, category || "Other", date, time, source]);
+    if (type === "debit") {
+      debitExpenses.push([title, amount, category || "Uncategorized", date, time]);
+    }
+  }
+
+  const transactionPlaceholders = [];
+  const transactionValues = [];
+  validTransactions.forEach((transaction, index) => {
+    const offset = index * 8;
+    transactionPlaceholders.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8})`
+    );
+    transactionValues.push(...transaction);
+  });
+
+  await pool.query(
+    `INSERT INTO imported_transactions (user_id, type, title, amount, category, date, time, source)
+     VALUES ${transactionPlaceholders.join(", ")}`,
+    transactionValues
+  );
+
+  if (debitExpenses.length > 0) {
+    const expensePlaceholders = [];
+    const expenseValues = [];
+    debitExpenses.forEach((expense, index) => {
+      const offset = index * 5;
+      expensePlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`);
+      expenseValues.push(...expense);
+    });
+
+    await pool.query(
+      `INSERT INTO ${table} (title, amount, category, date, time) VALUES ${expensePlaceholders.join(", ")}`,
+      expenseValues
+    );
+  }
+
+  return {
+    count: validTransactions.length,
+    debitCount: debitExpenses.length,
+    creditCount: validTransactions.length - debitExpenses.length,
+  };
+}
+exports.saveImportedTransactions = saveImportedTransactions;
+
 /* ADD EXPENSE */
 exports.addExpense = async (req, res) => {
   try {
@@ -44,6 +128,117 @@ exports.addExpense = async (req, res) => {
     );
 
     res.json({ msg: "Expense Added" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server Error" });
+  }
+};
+
+/* IMPORT CREDIT/DEBIT TRANSACTIONS */
+exports.importExpenses = async (req, res) => {
+  try {
+    const incoming = req.body.transactions || req.body.expenses;
+
+    if (!Array.isArray(incoming) || incoming.length === 0) {
+      return res.status(400).json({ msg: "No transactions to import" });
+    }
+
+    if (incoming.length > 100) {
+      return res.status(400).json({ msg: "Import limit is 100 transactions at a time" });
+    }
+
+    const result = await saveImportedTransactions(req.user.id, incoming);
+
+    res.json({
+      msg: "Transactions imported",
+      ...result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(err.statusCode || 500).json({ msg: err.statusCode ? err.message : "Server Error" });
+  }
+};
+
+/* AUTO IMPORT RAW TRANSACTION MESSAGE(S) */
+exports.autoImportTransaction = async (req, res) => {
+  try {
+    const messages = Array.isArray(req.body.messages)
+      ? req.body.messages
+      : [req.body.message];
+
+    const cleanMessages = messages
+      .map((message) => String(message || "").trim())
+      .filter(Boolean);
+
+    if (cleanMessages.length === 0) {
+      return res.status(400).json({ msg: "Transaction message is required" });
+    }
+
+    if (cleanMessages.length > 50) {
+      return res.status(400).json({ msg: "Auto import limit is 50 messages at a time" });
+    }
+
+    const transactions = cleanMessages.map(parseTransactionMessage);
+    const invalid = transactions.find((item) => !item.amount || item.amount <= 0);
+    if (invalid) {
+      return res.status(400).json({
+        msg: "Could not detect transaction amount from one or more messages",
+        source: invalid.source,
+      });
+    }
+
+    const result = await saveImportedTransactions(req.user.id, transactions);
+
+    res.json({
+      msg: "Transaction auto-imported",
+      transactions,
+      ...result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(err.statusCode || 500).json({ msg: err.statusCode ? err.message : "Server Error" });
+  }
+};
+
+/* MONTHLY IMPORTED TRANSACTIONS */
+exports.getImportedTransactions = async (req, res) => {
+  try {
+    await ensureTransactionTable();
+    const month = req.query.month || new Date().getMonth() + 1;
+    const year = req.query.year || new Date().getFullYear();
+
+    const result = await pool.query(
+      `SELECT id, type, title, amount, category, date::text, time, source, created_at
+       FROM imported_transactions
+       WHERE user_id = $1
+         AND EXTRACT(MONTH FROM date) = $2
+         AND EXTRACT(YEAR FROM date) = $3
+       ORDER BY date DESC, time DESC, created_at DESC`,
+      [req.user.id, month, year]
+    );
+
+    const summary = await pool.query(
+      `SELECT
+        COALESCE(SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END), 0) AS total_credit,
+        COALESCE(SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END), 0) AS total_debit,
+        COUNT(*) AS count
+       FROM imported_transactions
+       WHERE user_id = $1
+         AND EXTRACT(MONTH FROM date) = $2
+         AND EXTRACT(YEAR FROM date) = $3`,
+      [req.user.id, month, year]
+    );
+
+    const totals = summary.rows[0] || { total_credit: 0, total_debit: 0, count: 0 };
+    res.json({
+      transactions: result.rows,
+      summary: {
+        total_credit: totals.total_credit,
+        total_debit: totals.total_debit,
+        net: parseFloat(totals.total_credit || 0) - parseFloat(totals.total_debit || 0),
+        count: totals.count,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Server Error" });

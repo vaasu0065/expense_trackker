@@ -15,6 +15,7 @@ function formatCurrency(n) {
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [monthlyTotal, setMonthlyTotal] = useState(0);
+  const [monthlyCredit, setMonthlyCredit] = useState(0);
   const [budgetStatus, setBudgetStatus] = useState(null);
   const [filters, setFilters] = useState({ month: "", category: "", sort: "" });
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
@@ -55,6 +56,17 @@ export default function Dashboard() {
     }
   }, [currentMonth, currentYear]);
 
+  const loadMonthlyCredit = useCallback(async () => {
+    try {
+      const res = await api.get("/expenses/transactions", {
+        params: { month: currentMonth, year: currentYear },
+      });
+      setMonthlyCredit(parseFloat(res.data?.summary?.total_credit || 0));
+    } catch (err) {
+      setMonthlyCredit(0);
+    }
+  }, [currentMonth, currentYear]);
+
   useEffect(() => {
     loadSummary();
   }, [loadSummary]);
@@ -62,14 +74,16 @@ export default function Dashboard() {
   useEffect(() => {
     loadMonthlyTotal();
     loadBudgetStatus();
-  }, [loadMonthlyTotal, loadBudgetStatus]);
+    loadMonthlyCredit();
+  }, [loadMonthlyTotal, loadBudgetStatus, loadMonthlyCredit]);
 
   const refreshAll = useCallback(() => {
     loadSummary();
     loadMonthlyTotal();
     loadBudgetStatus();
+    loadMonthlyCredit();
     setRefreshKey((k) => k + 1);
-  }, [loadSummary, loadMonthlyTotal, loadBudgetStatus]);
+  }, [loadSummary, loadMonthlyTotal, loadBudgetStatus, loadMonthlyCredit]);
 
   useAutoRefresh(refreshAll);
 
@@ -91,7 +105,7 @@ export default function Dashboard() {
           </header>
 
           {/* Stat cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -104,6 +118,23 @@ export default function Dashboard() {
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-2xl">
                   ₹
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
+                    Credited
+                  </p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-600">
+                    {formatCurrency(monthlyCredit)}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">{monthName}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-xl font-bold text-emerald-600">
+                  +
                 </div>
               </div>
             </div>

@@ -5,8 +5,9 @@ import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 
 export default function ForgotPassword() {
-  const [step, setStep] = useState(1); // 1 = enter email, 2 = set new password
+  const [step, setStep] = useState(1); // 1 = enter email, 2 = enter code and new password
   const [email, setEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,8 +28,8 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await api.post("/auth/forgot-password/verify-email", { email: email.trim() });
-      showToast("Email verified! Set your new password.", "success");
+      const res = await api.post("/auth/forgot-password/verify-email", { email: email.trim() });
+      showToast(res.data?.msg || "Reset code sent. Check your email.", "success", 5000);
       setStep(2);
     } catch (err) {
       showToast(err.response?.data?.msg || "Something went wrong", "error");
@@ -38,6 +39,14 @@ export default function ForgotPassword() {
   };
 
   const handleResetPassword = async () => {
+    if (!resetCode.trim()) {
+      showToast("Please enter the reset code", "error");
+      return;
+    }
+    if (!/^\d{6}$/.test(resetCode.trim())) {
+      showToast("Reset code must be 6 digits", "warning");
+      return;
+    }
     if (!newPassword) {
       showToast("Please enter a new password", "error");
       return;
@@ -53,7 +62,11 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
-      await api.post("/auth/reset-password", { email: email.trim(), newPassword });
+      await api.post("/auth/reset-password", {
+        email: email.trim(),
+        resetCode: resetCode.trim(),
+        newPassword,
+      });
       showToast("Password updated! Redirecting to sign in…", "success");
       setTimeout(() => navigate("/login"), 1800);
     } catch (err) {
@@ -82,12 +95,12 @@ export default function ForgotPassword() {
                 ₹
               </div>
               <h1 className="text-2xl font-bold text-slate-800">
-                {step === 1 ? "Forgot password?" : "Set new password"}
+                {step === 1 ? "Forgot password?" : "Enter reset code"}
               </h1>
               <p className="text-slate-500 mt-1 text-sm">
                 {step === 1
                   ? "Enter your registered email to continue"
-                  : `Resetting password for ${email}`}
+                  : `We sent a 6-digit code for ${email}`}
               </p>
             </div>
 
@@ -129,6 +142,26 @@ export default function ForgotPassword() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Reset code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="6"
+                    placeholder="6-digit code"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onKeyPress={handleKeyPress}
+                    autoFocus
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow tracking-[0.3em] font-semibold"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    The code expires in 10 minutes.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     New password
                   </label>
                   <div className="relative">
@@ -138,7 +171,6 @@ export default function ForgotPassword() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      autoFocus
                       className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
                     />
                     <button
@@ -215,7 +247,7 @@ export default function ForgotPassword() {
                 </button>
 
                 <button
-                  onClick={() => { setStep(1); setNewPassword(""); setConfirmPassword(""); }}
+                  onClick={() => { setStep(1); setResetCode(""); setNewPassword(""); setConfirmPassword(""); }}
                   className="w-full py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
                 >
                   ← Use a different email

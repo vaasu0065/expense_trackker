@@ -69,6 +69,26 @@ export default function Navbar() {
               Statistics
             </Link>
             <Link
+              to="/import"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/import"
+                  ? "bg-primary-100 text-primary-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+              }`}
+            >
+              Import
+            </Link>
+            <Link
+              to="/bank"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === "/bank"
+                  ? "bg-primary-100 text-primary-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+              }`}
+            >
+              Bank
+            </Link>
+            <Link
               to="/lendborrow"
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 location.pathname === "/lendborrow"
@@ -117,6 +137,12 @@ export default function Navbar() {
               </Link>
               <Link to="/stats" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
                 Statistics
+              </Link>
+              <Link to="/import" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
+                Import
+              </Link>
+              <Link to="/bank" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
+                Bank
               </Link>
               <Link to="/lendborrow" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
                 Lend & Borrow

@@ -2,6 +2,8 @@ const express = require("express");
 const auth = require("../middleware/authMiddleware");
 const {
   addExpense,
+  importExpenses,
+  autoImportTransaction,
   getExpenses,
   monthlyStats,
   summary,
@@ -12,13 +14,17 @@ const {
   exportCSV,
   exportExcel,
   dailyStats,
-  dailyTotals
+  dailyTotals,
+  getImportedTransactions
 } = require("../controllers/expenseController");
 const { setBudget, getBudget } = require("../controllers/budgetController");
 
 const router = express.Router();
 
 router.post("/add", auth, addExpense);
+router.post("/import", auth, importExpenses);
+router.post("/auto-import", auth, autoImportTransaction);
+router.get("/transactions", auth, getImportedTransactions);
 router.get("/", auth, getExpenses);
 router.get("/monthly", auth, monthlyStats);
 router.get("/summary", auth, summary);
