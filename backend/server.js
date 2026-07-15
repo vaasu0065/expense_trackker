@@ -32,8 +32,12 @@ async function initDB() {
 }
 initDB();
 
-// TEST
-app.get("/test",(req,res)=>{
+// TEST & STATUS
+app.get("/", (req, res) => {
+  res.json({ status: "live", service: "Expense Tracker Pro API", version: "2.0.0" });
+});
+
+app.get("/test", (req, res) => {
   console.log('/test route hit', { headers: req.headers });
   res.json({ msg: "Backend Running OK" });
 });
@@ -44,6 +48,13 @@ app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
 app.use("/lendborrow", require("./routes/lendBorrowRoutes"));
 app.use("/bank", require("./routes/bankRoutes"));
+
+// ALIASES for /api prefix
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/expenses", require("./routes/expenseRoutes"));
+app.use("/api/budget", require("./routes/budgetRoutes"));
+app.use("/api/lendborrow", require("./routes/lendBorrowRoutes"));
+app.use("/api/bank", require("./routes/bankRoutes"));
 
 if (require.main === module) {
   app.listen(process.env.PORT || 5001, () =>
