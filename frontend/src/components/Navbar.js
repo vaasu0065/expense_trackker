@@ -11,13 +11,24 @@ import {
   Menu, 
   X, 
   Sparkles,
-  UserCheck
+  UserCheck,
+  RefreshCw
 } from "lucide-react";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const location = useLocation();
+
+  const triggerHardRefresh = () => {
+    setRefreshing(true);
+    if (window.hardRefreshPWA) {
+      window.hardRefreshPWA();
+    } else {
+      window.location.reload(true);
+    }
+  };
 
   const loadUser = useCallback(async () => {
     try {
@@ -94,8 +105,18 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* User Profile & Logout */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* User Profile & Logout & PWA Hard Refresh */}
+          <div className="hidden md:flex items-center gap-2.5">
+            <button
+              onClick={triggerHardRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 transition-all duration-300 shadow-sm active:scale-95"
+              title="Force Check & Hard Refresh PWA"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              <span>{refreshing ? "Refreshing…" : "Update PWA"}</span>
+            </button>
+
             {user && (
               <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-2xl bg-white/5 border border-white/10 shadow-sm">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
@@ -108,27 +129,37 @@ export default function Navbar() {
             )}
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/30 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/30 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="md:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/70 transition-all duration-200 active:scale-95"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X className="w-6 h-6 text-rose-500" /> : <Menu className="w-6 h-6 text-slate-700" />}
-          </button>
+          {/* Mobile menu buttons */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={triggerHardRefresh}
+              disabled={refreshing}
+              className="p-2.5 rounded-xl text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition-all active:scale-95"
+              title="Update PWA"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} />
+            </button>
+            <button
+              type="button"
+              className="p-2.5 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white border border-white/20 transition-all duration-200 active:scale-95"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X className="w-6 h-6 text-rose-400" /> : <Menu className="w-6 h-6 text-slate-300" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden py-4 border-t border-slate-200/80 animate-slide-down">
+          <div className="md:hidden py-4 border-t border-white/10 bg-[#131C31]/95 animate-slide-down">
             <div className="flex flex-col gap-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -137,33 +168,34 @@ export default function Navbar() {
                   <Link
                     key={item.path}
                     to={item.path}
+                    onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                       isActive
-                        ? "bg-primary-50 text-primary-700 border border-primary-200/60 shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100/80"
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                        : "text-slate-300 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? "text-primary-600" : "text-slate-400"}`} />
+                    <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`} />
                     {item.name}
                   </Link>
                 );
               })}
               
-              {user && (
-                <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between px-4">
+              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between px-4">
+                {user && (
                   <div className="flex items-center gap-2.5">
-                    <UserCheck className="w-4 h-4 text-primary-600" />
-                    <span className="text-sm font-semibold text-slate-700">{user.name}</span>
+                    <UserCheck className="w-4 h-4 text-indigo-400" />
+                    <span className="text-sm font-semibold text-white">{user.name}</span>
                   </div>
-                  <button
-                    onClick={logout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-500 hover:text-white transition-all"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    Sign Out
-                  </button>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500 hover:text-white transition-all ml-auto"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         )}
