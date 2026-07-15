@@ -50,30 +50,30 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/70 shadow-glass transition-all duration-300">
+    <nav className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-2xl border-b border-white/10 shadow-2xl transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Brand Logo */}
           <Link
             to="/"
-            className="group flex items-center gap-3 text-slate-800 hover:text-primary-600 transition-all duration-300"
+            className="group flex items-center gap-3 text-white hover:text-indigo-400 transition-all duration-300"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary-600 via-primary-500 to-teal-400 text-white font-black text-xl shadow-card group-hover:shadow-glow group-hover:scale-105 transition-all duration-300">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white font-black text-xl shadow-lg group-hover:shadow-indigo-500/50 group-hover:scale-105 transition-all duration-300">
               ₹
               <Sparkles className="absolute -top-1 -right-1 w-3.5 h-3.5 text-amber-300 animate-pulseGlow" />
             </div>
             <div>
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-800 bg-clip-text text-transparent block">
+              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent block">
                 Vegavruddhi
               </span>
-              <span className="text-[10px] font-semibold text-primary-600 uppercase tracking-widest -mt-1 block">
+              <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest -mt-1 block">
                 Expense AI
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
+          <div className="hidden lg:flex items-center gap-1 bg-[#131C31]/90 p-1.5 rounded-2xl border border-white/10 shadow-inner">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -83,11 +83,11 @@ export default function Navbar() {
                   to={item.path}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                     isActive
-                      ? "bg-white text-primary-700 shadow-sm scale-[1.02]"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]"
+                      : "text-slate-300 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? "text-primary-600 scale-110" : "text-slate-400 group-hover:text-slate-600"}`} />
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? "text-white scale-110" : "text-slate-400 group-hover:text-white"}`} />
                   {item.name}
                 </Link>
               );
@@ -97,18 +97,18 @@ export default function Navbar() {
           {/* User Profile & Logout */}
           <div className="hidden md:flex items-center gap-3">
             {user && (
-              <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-2xl bg-gradient-to-r from-primary-50 to-emerald-50/50 border border-primary-200/60 shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
+              <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-2xl bg-white/5 border border-white/10 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">
+                <span className="text-sm font-semibold text-slate-200 truncate max-w-[120px]">
                   {user.name}
                 </span>
               </div>
             )}
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50/80 hover:bg-rose-500 hover:text-white border border-rose-200/60 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/30 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>

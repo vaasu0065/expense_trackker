@@ -145,21 +145,21 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
             {/* Total Expenses */}
             <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Total Expenses
                   </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {summary ? formatCurrency(summary.total) : "—"}
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-rose-600">
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-rose-400">
                     <TrendingDown className="w-3.5 h-3.5" />
                     <span>All-time spent</span>
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300 shadow-lg">
                   <Wallet className="w-6 h-6" />
                 </div>
               </div>
@@ -167,21 +167,21 @@ export default function Dashboard() {
 
             {/* Credited */}
             <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Credited Income
                   </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">
                     {formatCurrency(monthlyCredit)}
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-400">
                     <ArrowUpRight className="w-3.5 h-3.5" />
                     <span>In {monthName}</span>
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-lg">
                   <ArrowUpRight className="w-6 h-6" />
                 </div>
               </div>
@@ -189,20 +189,20 @@ export default function Dashboard() {
 
             {/* Total Entries */}
             <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Total Entries
                   </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-blue-600 tracking-tight">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-indigo-400 tracking-tight">
                     {summary ? (summary.count || 0) : "—"}
                   </p>
-                  <div className="mt-2 text-xs font-medium text-slate-500">
+                  <div className="mt-2 text-xs font-medium text-slate-400">
                     Recorded logs
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-lg">
                   <Receipt className="w-6 h-6" />
                 </div>
               </div>
@@ -210,20 +210,20 @@ export default function Dashboard() {
 
             {/* Monthly Total */}
             <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     {monthName} Total
                   </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">
                     {formatCurrency(monthlyTotal)}
                   </p>
-                  <div className="mt-2 text-xs font-medium text-slate-500">
+                  <div className="mt-2 text-xs font-medium text-slate-400">
                     Current month burn
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-lg">
                   <CalendarRange className="w-6 h-6" />
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function Dashboard() {
 
             {/* Budget Status */}
             <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -239,23 +239,23 @@ export default function Dashboard() {
                   </p>
                   {budgetStatus && (budgetStatus.budget > 0 || budgetStatus.spent > 0) ? (
                     <>
-                      <p className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
+                      <p className="mt-2 text-xl sm:text-2xl font-extrabold text-white tracking-tight">
                         {formatCurrency(budgetStatus.remaining)} left
                       </p>
-                      <div className="mt-2 text-xs font-medium text-slate-500 truncate">
+                      <div className="mt-2 text-xs font-medium text-slate-400 truncate">
                         {formatCurrency(budgetStatus.spent)} / {formatCurrency(budgetStatus.budget)}
                       </div>
                     </>
                   ) : (
                     <>
-                      <p className="mt-2 text-lg font-bold text-slate-500">Not Set</p>
-                      <div className="mt-2 text-xs font-medium text-violet-600">
+                      <p className="mt-2 text-lg font-bold text-slate-400">Not Set</p>
+                      <div className="mt-2 text-xs font-medium text-violet-400">
                         Configure target below
                       </div>
                     </>
                   )}
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 shadow-lg">
                   <Target className="w-6 h-6" />
                 </div>
               </div>
@@ -268,36 +268,36 @@ export default function Dashboard() {
           </section>
 
           {/* Add Expense Section */}
-          <section className="glass-panel rounded-3xl p-6 sm:p-8 mb-8 border border-white shadow-card relative overflow-hidden">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-              <div className="w-10 h-10 rounded-2xl bg-primary-50 border border-primary-200/60 flex items-center justify-center text-primary-600 shadow-sm">
+          <section className="glass-panel rounded-3xl p-6 sm:p-8 mb-8 border border-white/10 shadow-2xl relative overflow-hidden">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg">
                 <PlusCircle className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Quick Expense Entry</h2>
-                <p className="text-xs text-slate-500">Log new transactions instantly into your ledger</p>
+                <h2 className="text-xl font-bold text-white tracking-tight">Quick Expense Entry</h2>
+                <p className="text-xs text-slate-400">Log new transactions instantly into your ledger</p>
               </div>
             </div>
             <AddExpense onAdded={refreshAll} />
           </section>
 
           {/* Date Selector Filter Bar */}
-          <div className="glass-card rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 border border-slate-200/60">
+          <div className="glass-card rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 border border-white/10">
             <div className="flex items-center gap-2">
-              <CalendarRange className="w-5 h-5 text-primary-600" />
-              <label className="font-bold text-slate-700 text-sm">Filter ledger by specific date:</label>
+              <CalendarRange className="w-5 h-5 text-indigo-400" />
+              <label className="font-bold text-slate-300 text-sm">Filter ledger by specific date:</label>
             </div>
             <div className="flex items-center gap-3">
               <input
                 type="date"
-                className="px-4 py-2 border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 shadow-inner"
+                className="px-4 py-2 border border-white/20 rounded-xl text-white font-semibold text-sm bg-slate-800/80 focus:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 shadow-inner"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
               />
               {selectedDate && (
                 <button
                   onClick={() => setSelectedDate("")}
-                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-300 bg-white/10 hover:bg-white/20 transition-colors"
                 >
                   Clear Date
                 </button>
@@ -307,11 +307,11 @@ export default function Dashboard() {
 
           {/* Main Expense List & Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Ledger & History</h2>
-                  <p className="text-xs text-slate-500">View, search, or edit recent transactions</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Ledger & History</h2>
+                  <p className="text-xs text-slate-400">View, search, or edit recent transactions</p>
                 </div>
               </div>
               <ExpenseList
@@ -322,11 +322,11 @@ export default function Dashboard() {
               />
             </section>
 
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Analytics & Trends</h2>
-                  <p className="text-xs text-slate-500">Visual breakdown of your category allocations</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Analytics & Trends</h2>
+                  <p className="text-xs text-slate-400">Visual breakdown of your category allocations</p>
                 </div>
               </div>
               <Charts />
