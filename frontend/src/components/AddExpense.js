@@ -2,9 +2,12 @@ import { useState } from "react";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
+import { Tag, IndianRupee, FolderHeart, Calendar, Clock, Plus, Sparkles } from "lucide-react";
 
 const getToday = () => new Date().toISOString().split("T")[0];
 const getNow = () => new Date().toTimeString().slice(0, 5); // HH:MM
+
+const POPULAR_CATEGORIES = ["Food & Dining", "Groceries", "Transport", "Shopping", "Entertainment", "Utilities", "Health"];
 
 export default function AddExpense({ onAdded }) {
   const [form, setForm] = useState({
@@ -18,6 +21,10 @@ export default function AddExpense({ onAdded }) {
   const { toast, showToast, hideToast } = useToast();
 
   const set = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const selectCategory = (cat) => {
+    setForm((prev) => ({ ...prev, category: cat }));
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -33,7 +40,7 @@ export default function AddExpense({ onAdded }) {
         ...form,
         category: form.category.trim(),
       });
-      showToast("Expense added!", "success");
+      showToast("Expense added successfully!", "success");
       setForm({ title: "", amount: "", category: "", date: getToday(), time: getNow() });
       if (typeof onAdded === "function") onAdded();
     } catch (err) {
@@ -47,76 +54,113 @@ export default function AddExpense({ onAdded }) {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
 
-      <form onSubmit={save} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-        {/* Title */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-          <input
-            type="text"
-            placeholder="e.g. Groceries"
-            value={form.title}
-            onChange={set("title")}
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
-          />
+      <form onSubmit={save} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+          {/* Title */}
+          <div className="lg:col-span-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1">
+              <Tag className="w-3.5 h-3.5 text-primary-500" /> Title
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Starbucks Coffee"
+              value={form.title}
+              onChange={set("title")}
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          {/* Amount */}
+          <div className="lg:col-span-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1">
+              <IndianRupee className="w-3.5 h-3.5 text-emerald-500" /> Amount (₹)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={form.amount}
+                onChange={set("amount")}
+                className="w-full pl-8 pr-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-bold text-sm text-emerald-700 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+            </div>
+          </div>
+
+          {/* Category */}
+          <div className="lg:col-span-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1">
+              <FolderHeart className="w-3.5 h-3.5 text-blue-500" /> Category
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Dining"
+              value={form.category}
+              onChange={set("category")}
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          {/* Date */}
+          <div className="lg:col-span-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-amber-500" /> Date
+            </label>
+            <input
+              type="date"
+              value={form.date}
+              onChange={set("date")}
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          {/* Time */}
+          <div className="lg:col-span-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-violet-500" /> Time
+            </label>
+            <input
+              type="time"
+              value={form.time}
+              onChange={set("time")}
+              className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+            />
+          </div>
+
+          {/* Submit */}
+          <div className="lg:col-span-1">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-4 py-3 bg-gradient-to-r from-primary-600 via-primary-500 to-teal-500 hover:from-primary-700 hover:to-teal-600 text-white font-extrabold rounded-2xl shadow-card hover:shadow-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>{loading ? "Adding…" : "Log Entry"}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Amount */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            value={form.amount}
-            onChange={set("amount")}
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
-          />
-        </div>
-
-        {/* Category – free text */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-          <input
-            type="text"
-            placeholder="e.g. Food, Travel…"
-            value={form.category}
-            onChange={set("category")}
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
-          />
-        </div>
-
-        {/* Date – defaults to today, user can change */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-          <input
-            type="date"
-            value={form.date}
-            onChange={set("date")}
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-          />
-        </div>
-
-        {/* Time */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Time</label>
-          <input
-            type="time"
-            value={form.time}
-            onChange={set("time")}
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="lg:col-span-1">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-card hover:shadow-card-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Adding…" : "Add Expense"}
-          </button>
+        {/* Quick Category Pills */}
+        <div className="pt-2 flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-bold uppercase text-slate-400 flex items-center gap-1 mr-1">
+            <Sparkles className="w-3 h-3 text-amber-400" /> Quick Select:
+          </span>
+          {POPULAR_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => selectCategory(cat)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                form.category === cat
+                  ? "bg-primary-500 text-white border-primary-500 shadow-sm scale-105"
+                  : "bg-white text-slate-600 border-slate-200/80 hover:border-primary-300 hover:bg-primary-50/50"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </form>
     </>

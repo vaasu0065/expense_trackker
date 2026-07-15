@@ -7,6 +7,13 @@ const path = require("path");
 
 const app = express();
 
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || "*",
   credentials: true,

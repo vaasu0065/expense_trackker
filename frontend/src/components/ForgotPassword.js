@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
+import { KeyRound, Mail, Lock, ArrowRight, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1); // 1 = enter email, 2 = enter code and new password
@@ -85,37 +86,43 @@ export default function ForgotPassword() {
         <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />
       )}
 
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-8 space-y-6 animate-slide-up">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-md relative z-10">
+          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/20 shadow-glow space-y-7 animate-slide-up">
 
             {/* Header */}
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-500 text-white text-2xl font-bold shadow-card mb-4">
-                ₹
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white text-3xl font-black shadow-card mb-4 ring-4 ring-white/30">
+                <KeyRound className="w-8 h-8" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-800">
-                {step === 1 ? "Forgot password?" : "Enter reset code"}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-extrabold border border-primary-200 mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Account Recovery
+              </div>
+              <h1 className="text-3xl font-black tracking-tight text-slate-800">
+                {step === 1 ? "Reset Password" : "Verify Code"}
               </h1>
-              <p className="text-slate-500 mt-1 text-sm">
+              <p className="text-slate-500 mt-1 text-sm font-medium">
                 {step === 1
-                  ? "Enter your registered email to continue"
-                  : `We sent a 6-digit code for ${email}`}
+                  ? "Enter your account email to receive a secure recovery code"
+                  : `Enter the 6-digit verification code dispatched to ${email}`}
               </p>
             </div>
 
             {/* Step indicator */}
             <div className="flex items-center gap-2">
-              <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? "bg-primary-500" : "bg-slate-200"}`} />
-              <div className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${step >= 2 ? "bg-primary-500" : "bg-slate-200"}`} />
+              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 1 ? "bg-gradient-to-r from-primary-500 to-teal-500" : "bg-slate-200"}`} />
+              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 2 ? "bg-gradient-to-r from-primary-500 to-teal-500" : "bg-slate-200"}`} />
             </div>
 
             {/* Step 1 – Email */}
             {step === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Email address
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-primary-600" /> Email Address
                   </label>
                   <input
                     type="email"
@@ -124,15 +131,15 @@ export default function ForgotPassword() {
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={handleKeyPress}
                     autoFocus
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
+                    className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
                   />
                 </div>
                 <button
                   onClick={handleVerifyEmail}
                   disabled={loading}
-                  className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-card transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
-                  {loading ? "Verifying…" : "Continue"}
+                  {loading ? "Verifying Email…" : "Send Reset Code →"}
                 </button>
               </div>
             )}
@@ -141,28 +148,28 @@ export default function ForgotPassword() {
             {step === 2 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Reset code
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                    6-Digit Reset Code
                   </label>
                   <input
                     type="text"
                     inputMode="numeric"
                     maxLength="6"
-                    placeholder="6-digit code"
+                    placeholder="000000"
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     onKeyPress={handleKeyPress}
                     autoFocus
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow tracking-[0.3em] font-semibold"
+                    className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all tracking-[0.45em] font-black text-center text-lg text-primary-700 shadow-inner"
                   />
-                  <p className="text-xs text-slate-400 mt-1">
-                    The code expires in 10 minutes.
+                  <p className="text-[11px] font-semibold text-slate-400 mt-1.5 text-center">
+                    Expires in 10 minutes from dispatch.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    New password
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-primary-600" /> New Password
                   </label>
                   <div className="relative">
                     <input
@@ -171,41 +178,31 @@ export default function ForgotPassword() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
+                      className="w-full px-4 py-3.5 bg-slate-50/90 pr-12 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors text-xs font-bold"
                     >
-                      {showPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      {showPassword ? "Hide" : "Show"}
                     </button>
                   </div>
 
                   {/* Password strength indicator */}
                   {newPassword.length > 0 && (
-                    <div className="mt-2 flex gap-1">
+                    <div className="mt-2 flex gap-1 items-center">
                       {[1, 2, 3].map((level) => (
                         <div
                           key={level}
-                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                             newPassword.length >= level * 4
-                              ? level === 1 ? "bg-red-400" : level === 2 ? "bg-yellow-400" : "bg-primary-500"
+                              ? level === 1 ? "bg-rose-500" : level === 2 ? "bg-amber-500" : "bg-emerald-500"
                               : "bg-slate-200"
                           }`}
                         />
                       ))}
-                      <span className="text-xs text-slate-400 ml-1">
+                      <span className="text-[11px] font-black uppercase text-slate-400 ml-1.5">
                         {newPassword.length < 4 ? "Weak" : newPassword.length < 8 ? "Fair" : "Strong"}
                       </span>
                     </div>
@@ -213,8 +210,8 @@ export default function ForgotPassword() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Confirm password
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Confirm New Password
                   </label>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -222,46 +219,50 @@ export default function ForgotPassword() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow ${
+                    className={`w-full px-4 py-3.5 border rounded-2xl font-semibold text-slate-800 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all ${
                       confirmPassword && confirmPassword !== newPassword
-                        ? "border-red-300 bg-red-50"
+                        ? "border-rose-300 bg-rose-50/70"
                         : confirmPassword && confirmPassword === newPassword
-                        ? "border-primary-300 bg-primary-50"
-                        : "border-slate-200"
+                        ? "border-emerald-300 bg-emerald-50/70"
+                        : "border-slate-200/80 bg-slate-50/90"
                     }`}
                   />
                   {confirmPassword && confirmPassword !== newPassword && (
-                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                    <p className="text-xs font-bold text-rose-500 mt-1.5">⚠ Passwords do not match</p>
                   )}
                   {confirmPassword && confirmPassword === newPassword && (
-                    <p className="text-xs text-primary-600 mt-1">✓ Passwords match</p>
+                    <p className="text-xs font-bold text-emerald-600 mt-1.5">✓ Passwords exactly match</p>
                   )}
                 </div>
 
                 <button
                   onClick={handleResetPassword}
                   disabled={loading}
-                  className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-card transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
-                  {loading ? "Updating password…" : "Update password"}
+                  {loading ? "Updating Password…" : "Save New Password & Sign In"}
                 </button>
 
                 <button
                   onClick={() => { setStep(1); setResetCode(""); setNewPassword(""); setConfirmPassword(""); }}
-                  className="w-full py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                  className="w-full py-2.5 text-xs font-extrabold text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1"
                 >
-                  ← Use a different email
+                  <ArrowLeft className="w-3.5 h-3.5" /> Use a different email address
                 </button>
               </div>
             )}
 
             {/* Back to login */}
             <div className="text-center pt-2 border-t border-slate-100">
-              <a href="/login" className="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline">
-                ← Back to sign in
+              <a href="/login" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-extrabold hover:underline">
+                <ArrowLeft className="w-4 h-4" /> Back to Sign In
               </a>
             </div>
           </div>
+
+          <p className="text-center text-slate-400 font-medium text-xs mt-6 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Secure 256-bit Identity Protection
+          </p>
         </div>
       </div>
     </>

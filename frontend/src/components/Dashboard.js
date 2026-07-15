@@ -6,6 +6,17 @@ import AddExpense from "./AddExpense";
 import Charts from "./Charts";
 import Budget from "./Budget";
 import useAutoRefresh from "../hooks/useAutoRefresh";
+import { 
+  Wallet, 
+  ArrowUpRight, 
+  Receipt, 
+  CalendarRange, 
+  Target, 
+  RefreshCw, 
+  Sparkles,
+  PlusCircle,
+  TrendingDown
+} from "lucide-react";
 
 function formatCurrency(n) {
   const num = parseFloat(n) || 0;
@@ -20,6 +31,7 @@ export default function Dashboard() {
   const [filters, setFilters] = useState({ month: "", category: "", sort: "" });
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
@@ -78,11 +90,13 @@ export default function Dashboard() {
   }, [loadMonthlyTotal, loadBudgetStatus, loadMonthlyCredit]);
 
   const refreshAll = useCallback(() => {
+    setIsRefreshing(true);
     loadSummary();
     loadMonthlyTotal();
     loadBudgetStatus();
     loadMonthlyCredit();
     setRefreshKey((k) => k + 1);
+    setTimeout(() => setIsRefreshing(false), 600);
   }, [loadSummary, loadMonthlyTotal, loadBudgetStatus, loadMonthlyCredit]);
 
   useAutoRefresh(refreshAll);
@@ -95,132 +109,211 @@ export default function Dashboard() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-surface-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <header className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
-              Dashboard
-            </h1>
-            <p className="mt-1 text-slate-500">Overview of your expenses and budget</p>
+      <div className="min-h-screen py-8 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Banner */}
+          <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 rounded-3xl text-white shadow-card relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 w-60 h-60 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-500/20 text-primary-300 border border-primary-500/30">
+                  <Sparkles className="w-3.5 h-3.5 animate-pulseGlow" /> Live Dashboard
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+                Financial Overview
+              </h1>
+              <p className="mt-1 text-slate-300 text-sm sm:text-base">
+                Track every penny, optimize budgets, and achieve financial freedom.
+              </p>
+            </div>
+
+            <div className="relative z-10 flex items-center gap-3 self-start sm:self-center">
+              <button
+                onClick={refreshAll}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold text-sm backdrop-blur-md transition-all duration-300 active:scale-95 shadow-sm"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-primary-400" : ""}`} />
+                <span>Refresh Data</span>
+              </button>
+            </div>
           </header>
 
-          {/* Stat cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
-              <div className="flex items-center justify-between">
+          {/* Stat Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+            {/* Total Expenses */}
+            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    Total expenses
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Total Expenses
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-primary-600">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                     {summary ? formatCurrency(summary.total) : "—"}
                   </p>
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-rose-600">
+                    <TrendingDown className="w-3.5 h-3.5" />
+                    <span>All-time spent</span>
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-2xl">
-                  ₹
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <Wallet className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
-              <div className="flex items-center justify-between">
+            {/* Credited */}
+            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    Credited
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Credited Income
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-emerald-600">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">
                     {formatCurrency(monthlyCredit)}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{monthName}</p>
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    <span>In {monthName}</span>
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-xl font-bold text-emerald-600">
-                  +
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <ArrowUpRight className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
-              <div className="flex items-center justify-between">
+            {/* Total Entries */}
+            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    Total entries
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Total Entries
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-blue-600">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-blue-600 tracking-tight">
                     {summary ? (summary.count || 0) : "—"}
                   </p>
+                  <div className="mt-2 text-xs font-medium text-slate-500">
+                    Recorded logs
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-xl font-bold text-blue-600">
-                  #
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <Receipt className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
-              <div className="flex items-center justify-between">
+            {/* Monthly Total */}
+            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    {monthName}
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    {monthName} Total
                   </p>
-                  <p className="mt-2 text-2xl font-bold text-amber-600">
+                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight">
                     {formatCurrency(monthlyTotal)}
                   </p>
+                  <div className="mt-2 text-xs font-medium text-slate-500">
+                    Current month burn
+                  </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-xl font-bold text-amber-600">
-                  📅
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <CalendarRange className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-card-hover transition-shadow">
-              <div className="flex items-center justify-between">
+            {/* Budget Status */}
+            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    Budget
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Budget Target
                   </p>
-                  {budgetStatus &&
-                  (budgetStatus.budget > 0 || budgetStatus.spent > 0) ? (
+                  {budgetStatus && (budgetStatus.budget > 0 || budgetStatus.spent > 0) ? (
                     <>
-                      <p className="mt-2 text-xl font-bold text-slate-800">
+                      <p className="mt-2 text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
                         {formatCurrency(budgetStatus.remaining)} left
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {formatCurrency(budgetStatus.spent)} of{" "}
-                        {formatCurrency(budgetStatus.budget)} spent
-                      </p>
+                      <div className="mt-2 text-xs font-medium text-slate-500 truncate">
+                        {formatCurrency(budgetStatus.spent)} / {formatCurrency(budgetStatus.budget)}
+                      </div>
                     </>
                   ) : (
-                    <p className="mt-2 text-lg font-semibold text-slate-500">Set budget below</p>
+                    <>
+                      <p className="mt-2 text-lg font-bold text-slate-500">Not Set</p>
+                      <div className="mt-2 text-xs font-medium text-violet-600">
+                        Configure target below
+                      </div>
+                    </>
                   )}
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-xl font-bold text-violet-600">
-                  🎯
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                  <Target className="w-6 h-6" />
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Budget Section */}
           <section className="mb-8">
             <Budget onSaved={refreshAll} />
           </section>
 
-          <section className="bg-white rounded-2xl shadow-card border border-slate-100 p-6 mb-8">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Add expense</h2>
+          {/* Add Expense Section */}
+          <section className="glass-panel rounded-3xl p-6 sm:p-8 mb-8 border border-white shadow-card relative overflow-hidden">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-2xl bg-primary-50 border border-primary-200/60 flex items-center justify-center text-primary-600 shadow-sm">
+                <PlusCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Quick Expense Entry</h2>
+                <p className="text-xs text-slate-500">Log new transactions instantly into your ledger</p>
+              </div>
+            </div>
             <AddExpense onAdded={refreshAll} />
           </section>
 
-          <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-4 mb-8 flex flex-wrap items-center gap-4">
-            <label className="font-medium text-slate-700">View by date:</label>
-            <input
-              type="date"
-              className="px-3 py-2 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
+          {/* Date Selector Filter Bar */}
+          <div className="glass-card rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 border border-slate-200/60">
+            <div className="flex items-center gap-2">
+              <CalendarRange className="w-5 h-5 text-primary-600" />
+              <label className="font-bold text-slate-700 text-sm">Filter ledger by specific date:</label>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                className="px-4 py-2 border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 shadow-inner"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate("")}
+                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                >
+                  Clear Date
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <section className="bg-white rounded-2xl shadow-card border border-slate-100 p-6">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Expenses</h2>
+          {/* Main Expense List & Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Ledger & History</h2>
+                  <p className="text-xs text-slate-500">View, search, or edit recent transactions</p>
+                </div>
+              </div>
               <ExpenseList
                 filters={filters}
                 setFilters={setFilters}
@@ -229,7 +322,13 @@ export default function Dashboard() {
               />
             </section>
 
-            <section>
+            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Analytics & Trends</h2>
+                  <p className="text-xs text-slate-500">Visual breakdown of your category allocations</p>
+                </div>
+              </div>
               <Charts />
             </section>
           </div>

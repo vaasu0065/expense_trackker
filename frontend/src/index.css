@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-800 bg-surface-50 font-sans;
+    @apply antialiased text-slate-800 bg-gradient-to-br from-surface-50 via-slate-50 to-emerald-50/20 font-sans min-h-screen selection:bg-primary-500 selection:text-white;
   }
 }
 
@@ -23,8 +23,38 @@
   }
 
   .animate-slide-in {
-    animation: slide-in 0.3s ease-out;
+    animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  /* Premium Glassmorphism */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-card transition-all duration-300 hover:shadow-card-hover hover:border-primary-200/60;
+  }
+
+  .glass-panel {
+    @apply bg-white/90 backdrop-blur-2xl border border-slate-100/80 shadow-glass;
+  }
+
+  /* Gradient Text Utility */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent font-extrabold;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Remove number input spinners */

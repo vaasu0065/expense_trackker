@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
+import { User, Mail, Lock, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -34,7 +35,7 @@ export default function Register() {
         email: email.trim(),
         password,
       });
-      showToast("Account created. Please sign in.", "success");
+      showToast("Account created successfully. Redirecting to sign in…", "success");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       showToast(err.response?.data?.msg || "Registration failed", "error");
@@ -57,57 +58,83 @@ export default function Register() {
         />
       )}
 
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-card border border-slate-100 p-8 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
+        {/* Background ambient glowing spheres */}
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-md relative z-10">
+          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/20 shadow-glow space-y-7">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-500 text-white text-2xl font-bold shadow-card mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white text-3xl font-black shadow-card mb-4 ring-4 ring-white/30">
                 ₹
               </div>
-              <h1 className="text-2xl font-bold text-slate-800">Create account</h1>
-              <p className="text-slate-500 mt-1">Sign up to start tracking your expenses</p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-extrabold border border-primary-200 mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Start Your Financial Journey
+              </div>
+              <h1 className="text-3xl font-black tracking-tight text-slate-800">Create Account</h1>
+              <p className="text-slate-500 mt-1 text-sm font-medium">Join Expanse Tracker to master your money</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full name</label>
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-primary-600" /> Full Name
+                </label>
                 <input
                   type="text"
-                  placeholder="Your name"
+                  placeholder="Your Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-primary-600" /> Email Address
+                </label>
                 <input
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-primary-600" /> Password (Min 6 chars)
+                </label>
                 <input
                   type="password"
-                  placeholder="Min 6 characters"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
                 />
               </div>
+
               <button
                 onClick={register}
                 disabled={loading}
-                className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl shadow-card transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                {loading ? "Creating account…" : "Create account"}
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creating Account…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Register & Get Started</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
 
@@ -115,17 +142,24 @@ export default function Register() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-500">Already have an account?</span>
+              <div className="relative flex justify-center text-xs uppercase tracking-wider font-extrabold">
+                <span className="px-3 bg-white/90 rounded-full text-slate-400">Already have an account?</span>
               </div>
             </div>
 
             <div className="text-center">
-              <a href="/login" className="text-primary-600 hover:text-primary-700 font-medium hover:underline">
-                Sign in
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-sm transition-all active:scale-95 border border-slate-200/80"
+              >
+                <span>Sign in to Existing Account</span>
               </a>
             </div>
           </div>
+
+          <p className="text-center text-slate-400 font-medium text-xs mt-6 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Secure Cloud Vault & End-to-end Sync
+          </p>
         </div>
       </div>
     </>

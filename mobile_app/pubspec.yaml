@@ -1,0 +1,46 @@
+name: expense_tracker_pro
+description: Production-ready Expense Tracker Mobile Application with Android SMS Auto-Detection, Gmail OAuth Sync, and AI Category Classification.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management & Routing
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+
+  # Networking & API
+  dio: ^5.5.0
+  http: ^1.2.1
+
+  # Local Storage & Caching
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.3
+  shared_preferences: ^2.2.3
+
+  # Charts & UI Components
+  fl_chart: ^0.68.0
+  lucide_icons: ^0.257.0
+  cupertino_icons: ^1.0.6
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+
+  # Native Device & Permissions (Android SMS & OAuth)
+  permission_handler: ^11.3.1
+  google_sign_in: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true

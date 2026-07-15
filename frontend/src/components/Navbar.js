@@ -1,6 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../api";
+import { 
+  LayoutDashboard, 
+  BarChart3, 
+  UploadCloud, 
+  Landmark, 
+  HandCoins, 
+  LogOut, 
+  Menu, 
+  X, 
+  Sparkles,
+  UserCheck
+} from "lucide-react";
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -29,133 +41,129 @@ export default function Navbar() {
     window.location.href = "/login";
   };
 
+  const navItems = [
+    { name: "Dashboard", path: "/", icon: LayoutDashboard },
+    { name: "Statistics", path: "/stats", icon: BarChart3 },
+    { name: "Import", path: "/import", icon: UploadCloud },
+    { name: "Bank Sync", path: "/bank", icon: Landmark },
+    { name: "Lend & Borrow", path: "/lendborrow", icon: HandCoins },
+  ];
+
   return (
-    <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-card">
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/70 shadow-glass transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
-          {/* Logo */}
+        <div className="flex justify-between items-center h-16">
+          {/* Brand Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 text-slate-800 hover:text-primary-600 transition-colors"
+            className="group flex items-center gap-3 text-slate-800 hover:text-primary-600 transition-all duration-300"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary-500 text-white font-bold text-lg shadow-card">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary-600 via-primary-500 to-teal-400 text-white font-black text-xl shadow-card group-hover:shadow-glow group-hover:scale-105 transition-all duration-300">
               ₹
-            </span>
-            <span className="font-bold text-xl tracking-tight hidden sm:block">
-              Expense Tracker
-            </span>
+              <Sparkles className="absolute -top-1 -right-1 w-3.5 h-3.5 text-amber-300 animate-pulseGlow" />
+            </div>
+            <div>
+              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-800 bg-clip-text text-transparent block">
+                Vegavruddhi
+              </span>
+              <span className="text-[10px] font-semibold text-primary-600 uppercase tracking-widest -mt-1 block">
+                Expense AI
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link
-              to="/"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/"
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/stats"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/stats"
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              Statistics
-            </Link>
-            <Link
-              to="/import"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/import"
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              Import
-            </Link>
-            <Link
-              to="/bank"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/bank"
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              Bank
-            </Link>
-            <Link
-              to="/lendborrow"
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === "/lendborrow"
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              Lend & Borrow
-            </Link>
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    isActive
+                      ? "bg-white text-primary-700 shadow-sm scale-[1.02]"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? "text-primary-600 scale-110" : "text-slate-400 group-hover:text-slate-600"}`} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* User Profile & Logout */}
+          <div className="hidden md:flex items-center gap-3">
             {user && (
-              <span className="ml-2 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium">
-                {user.name}
-              </span>
+              <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-2xl bg-gradient-to-r from-primary-50 to-emerald-50/50 border border-primary-200/60 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">
+                  {user.name}
+                </span>
+              </div>
             )}
             <button
               onClick={logout}
-              className="ml-2 px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50/80 hover:bg-rose-500 hover:text-white border border-rose-200/60 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
             >
-              Logout
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
             </button>
           </div>
 
           {/* Mobile menu button */}
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+            className="md:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/70 transition-all duration-200 active:scale-95"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Toggle menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            {menuOpen ? <X className="w-6 h-6 text-rose-500" /> : <Menu className="w-6 h-6 text-slate-700" />}
           </button>
         </div>
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden py-3 border-t border-slate-200 animate-fade-in">
-            <div className="flex flex-col gap-1">
-              <Link to="/" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
-                Dashboard
-              </Link>
-              <Link to="/stats" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
-                Statistics
-              </Link>
-              <Link to="/import" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
-                Import
-              </Link>
-              <Link to="/bank" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
-                Bank
-              </Link>
-              <Link to="/lendborrow" className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 font-medium">
-                Lend & Borrow
-              </Link>
+          <div className="md:hidden py-4 border-t border-slate-200/80 animate-slide-down">
+            <div className="flex flex-col gap-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      isActive
+                        ? "bg-primary-50 text-primary-700 border border-primary-200/60 shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100/80"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? "text-primary-600" : "text-slate-400"}`} />
+                    {item.name}
+                  </Link>
+                );
+              })}
+              
               {user && (
-                <div className="px-4 py-2 text-slate-500 text-sm">Signed in as {user.name}</div>
+                <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between px-4">
+                  <div className="flex items-center gap-2.5">
+                    <UserCheck className="w-4 h-4 text-primary-600" />
+                    <span className="text-sm font-semibold text-slate-700">{user.name}</span>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-500 hover:text-white transition-all"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
               )}
-              <button
-                onClick={logout}
-                className="text-left px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium"
-              >
-                Logout
-              </button>
             </div>
           </div>
         )}
