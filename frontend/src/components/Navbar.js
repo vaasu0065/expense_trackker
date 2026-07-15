@@ -64,10 +64,10 @@ export default function Navbar() {
             </div>
             <div>
               <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent block">
-                Vegavruddhi
+                Expense Tracker
               </span>
               <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest -mt-1 block">
-                Expense AI
+                AI Ledger Pro
               </span>
             </div>
           </Link>
