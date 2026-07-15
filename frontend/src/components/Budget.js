@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
-import { Target, TrendingUp, AlertTriangle, CheckCircle2, Sparkles, Save, RefreshCw } from "lucide-react";
+import { Target, AlertTriangle, CheckCircle2, Sparkles, Save, RefreshCw } from "lucide-react";
 
 const currentMonth = new Date().getMonth() + 1;
 const currentYear = new Date().getFullYear();

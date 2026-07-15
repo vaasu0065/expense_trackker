@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api";
 import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
-import { BarChart3, TrendingUp, Calendar, Flame, Sparkles } from "lucide-react";
+import { BarChart3, TrendingUp, Calendar, Flame } from "lucide-react";
 
 function formatShortDate(dateStr) {
   const d = new Date(dateStr);

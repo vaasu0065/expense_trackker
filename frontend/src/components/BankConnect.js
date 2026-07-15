@@ -3,7 +3,7 @@ import Navbar from "./Navbar";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import api from "../api";
-import { Landmark, ShieldCheck, RefreshCw, Link2, Sparkles, CheckCircle, ArrowUpRight, ArrowDownRight, AlertCircle } from "lucide-react";
+import { Landmark, ShieldCheck, RefreshCw, Link2, Sparkles, CheckCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 function formatDateTime(value) {
   if (!value) return "Never";
