@@ -79,69 +79,69 @@ export default function Budget({ onSaved }) {
         />
       )}
 
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card relative overflow-hidden">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-violet-50 border border-violet-200/60 flex items-center justify-center text-violet-600 shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-lg">
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-800 tracking-tight">Budget & Income Target</h3>
-              <p className="text-xs text-slate-500">Set monthly caps to track your spending threshold</p>
+              <h3 className="text-xl font-bold text-white tracking-tight">Budget & Income Target</h3>
+              <p className="text-xs text-slate-400">Set monthly caps to track your spending threshold</p>
             </div>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-100 text-violet-700">
-            <Sparkles className="w-3.5 h-3.5 text-violet-500" /> {monthName} {year}
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+            <Sparkles className="w-3.5 h-3.5 text-violet-400" /> {monthName} {year}
           </span>
         </div>
 
         <form onSubmit={save} className="space-y-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Month</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Month</label>
               <select
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all shadow-inner"
+                className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-violet-500/50 focus:border-violet-400 outline-none transition-all shadow-inner"
               >
                 {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i} value={i + 1}>
+                  <option key={i} value={i + 1} className="bg-[#0F172A] text-white">
                     {new Date(0, i).toLocaleString("en", { month: "short" })}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Year</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Year</label>
               <input
                 type="number"
                 min="2020"
                 max="2030"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all shadow-inner"
+                className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-violet-500/50 focus:border-violet-400 outline-none transition-all shadow-inner"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Income (₹)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Income (₹)</label>
               <input
                 type="number"
                 min="0"
                 placeholder="0"
                 value={income}
                 onChange={(e) => setIncome(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-bold text-sm text-emerald-700 focus:bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all shadow-inner"
+                className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-bold text-sm text-emerald-400 placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-violet-500/50 focus:border-violet-400 outline-none transition-all shadow-inner"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Budget Cap (₹)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Budget Cap (₹)</label>
               <input
                 type="number"
                 min="0"
                 placeholder="0"
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-200 rounded-2xl font-bold text-sm text-violet-700 focus:bg-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all shadow-inner"
+                className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-bold text-sm text-violet-400 placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-violet-500/50 focus:border-violet-400 outline-none transition-all shadow-inner"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function Budget({ onSaved }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-card hover:shadow-glow transition-all duration-300 disabled:opacity-50 active:scale-95"
+              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-violet-500/30 transition-all duration-300 disabled:opacity-50 active:scale-95"
             >
               <Save className="w-4 h-4" />
               <span>{loading ? "Saving…" : "Save Monthly Target"}</span>
@@ -158,7 +158,7 @@ export default function Budget({ onSaved }) {
             <button
               type="button"
               onClick={load}
-              className="flex items-center gap-2 px-4 py-2.5 border border-slate-200/80 rounded-2xl font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors active:scale-95 text-sm"
+              className="flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-2xl font-semibold text-slate-200 bg-white/10 hover:bg-white/20 transition-colors active:scale-95 text-sm"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Refresh</span>
@@ -167,36 +167,36 @@ export default function Budget({ onSaved }) {
         </form>
 
         {summary && (summary.budget > 0 || summary.spent > 0) && (
-          <div className="mt-8 pt-6 border-t border-slate-100 animate-slide-up">
+          <div className="mt-8 pt-6 border-t border-white/10 animate-slide-up">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
                 {pct >= 100 ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 animate-pulse">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse">
                     <AlertTriangle className="w-3.5 h-3.5" /> Budget Exceeded!
                   </span>
                 ) : pct >= 80 ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                     <AlertTriangle className="w-3.5 h-3.5" /> Nearing Limit ({pct.toFixed(0)}%)
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Healthy Budget ({pct.toFixed(0)}% used)
                   </span>
                 )}
-                <span className="text-sm font-bold text-slate-700">
+                <span className="text-sm font-bold text-white">
                   {monthName} {year}
                 </span>
               </div>
               <div className="text-sm font-extrabold flex items-center gap-2">
-                <span className="text-slate-500">
-                  Spent: <span className="text-slate-800">{formatCurrency(summary.spent)}</span>
+                <span className="text-slate-400">
+                  Spent: <span className="text-white">{formatCurrency(summary.spent)}</span>
                 </span>
-                <span className="text-slate-300">/</span>
+                <span className="text-slate-600">/</span>
                 <span
                   className={
                     (summary.remaining ?? 0) < 0
-                      ? "text-rose-600"
-                      : "text-emerald-600"
+                      ? "text-rose-400"
+                      : "text-emerald-400"
                   }
                 >
                   Remaining: {formatCurrency(summary.remaining)}
@@ -205,23 +205,23 @@ export default function Budget({ onSaved }) {
             </div>
 
             {/* Premium Animated Progress Bar */}
-            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
+            <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
               <div
                 className={`h-full rounded-full transition-all duration-700 shadow-sm ${
                   pct >= 100 
                     ? "bg-gradient-to-r from-rose-500 to-red-600" 
                     : pct >= 80 
                     ? "bg-gradient-to-r from-amber-400 to-orange-500" 
-                    : "bg-gradient-to-r from-emerald-400 via-teal-500 to-primary-600"
+                    : "bg-gradient-to-r from-emerald-400 via-teal-500 to-indigo-600"
                 }`}
                 style={{ width: `${pct}%` }}
               />
             </div>
 
             {summary.income != null && summary.income > 0 && (
-              <div className="mt-3 flex items-center justify-between text-xs font-semibold text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200/50">
-                <span>Recorded Monthly Income: <strong className="text-emerald-600 font-bold">{formatCurrency(summary.income)}</strong></span>
-                <span>Savings Potential: <strong className="text-primary-600 font-bold">{formatCurrency(Math.max(0, summary.income - summary.spent))}</strong></span>
+              <div className="mt-3 flex items-center justify-between text-xs font-semibold text-slate-300 bg-[#1A253D] px-4 py-2.5 rounded-xl border border-white/10">
+                <span>Recorded Monthly Income: <strong className="text-emerald-400 font-bold">{formatCurrency(summary.income)}</strong></span>
+                <span>Savings Potential: <strong className="text-indigo-400 font-bold">{formatCurrency(Math.max(0, summary.income - summary.spent))}</strong></span>
               </div>
             )}
           </div>

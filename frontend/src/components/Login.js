@@ -81,20 +81,20 @@ export default function Login() {
         <div className="w-full max-w-md relative z-10">
           <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/20 shadow-glow space-y-7">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white text-3xl font-black shadow-card mb-4 ring-4 ring-white/30">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-black shadow-lg mb-4 ring-4 ring-white/10">
                 ₹
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-extrabold border border-primary-200 mb-2">
-                <Sparkles className="w-3.5 h-3.5" /> Expanse Tracker Pro
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold border border-indigo-500/30 mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Expense Tracker Pro
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-800">Welcome Back</h1>
-              <p className="text-slate-500 mt-1 text-sm font-medium">Sign in to manage and analyze your wealth</p>
+              <h1 className="text-3xl font-black tracking-tight text-white">Welcome Back</h1>
+              <p className="text-slate-400 mt-1 text-sm font-medium">Sign in to manage and analyze your wealth</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-primary-600" /> Email Address
+                <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-indigo-400" /> Email Address
                 </label>
                 <input
                   type="email"
@@ -102,18 +102,18 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+                  className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-primary-600" /> Password
+                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-indigo-400" /> Password
                   </label>
                   <a
                     href="/forgot-password"
-                    className="text-xs text-primary-600 hover:text-primary-700 hover:underline font-bold transition-colors"
+                    className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold transition-colors"
                   >
                     Forgot password?
                   </a>
@@ -124,7 +124,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+                  className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
                 />
               </div>
 

@@ -95,16 +95,16 @@ export default function ForgotPassword() {
 
             {/* Header */}
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white text-3xl font-black shadow-card mb-4 ring-4 ring-white/30">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-black shadow-lg mb-4 ring-4 ring-white/10">
                 <KeyRound className="w-8 h-8" />
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-extrabold border border-primary-200 mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold border border-indigo-500/30 mb-2">
                 <Sparkles className="w-3.5 h-3.5" /> Account Recovery
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-800">
+              <h1 className="text-3xl font-black tracking-tight text-white">
                 {step === 1 ? "Reset Password" : "Verify Code"}
               </h1>
-              <p className="text-slate-500 mt-1 text-sm font-medium">
+              <p className="text-slate-400 mt-1 text-sm font-medium">
                 {step === 1
                   ? "Enter your account email to receive a secure recovery code"
                   : `Enter the 6-digit verification code dispatched to ${email}`}
@@ -113,16 +113,16 @@ export default function ForgotPassword() {
 
             {/* Step indicator */}
             <div className="flex items-center gap-2">
-              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 1 ? "bg-gradient-to-r from-primary-500 to-teal-500" : "bg-slate-200"}`} />
-              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 2 ? "bg-gradient-to-r from-primary-500 to-teal-500" : "bg-slate-200"}`} />
+              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 1 ? "bg-gradient-to-r from-indigo-500 to-purple-600" : "bg-slate-700"}`} />
+              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 2 ? "bg-gradient-to-r from-indigo-500 to-purple-600" : "bg-slate-700"}`} />
             </div>
 
             {/* Step 1 – Email */}
             {step === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-primary-600" /> Email Address
+                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-indigo-400" /> Email Address
                   </label>
                   <input
                     type="email"
@@ -131,7 +131,7 @@ export default function ForgotPassword() {
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={handleKeyPress}
                     autoFocus
-                    className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+                    className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
                   />
                 </div>
                 <button
