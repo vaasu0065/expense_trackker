@@ -7,10 +7,20 @@ class ApiClient {
   static late Dio _dio;
 
   static void init() {
-    // 10.0.2.2 is loopback for Android Emulator, localhost for iOS/Web/Mac
-    final baseUrl = (!kIsWeb && Platform.isAndroid)
-        ? 'http://10.0.2.2:5001'
-        : 'http://localhost:5001';
+    // 1. Check if an API_URL was passed via `--dart-define=API_URL=...` during build/run
+    // 2. If in release mode without override, use production Vercel backend
+    // 3. Otherwise fallback to local dev emulator (10.0.2.2) or localhost
+    const definedApiUrl = String.fromEnvironment('API_URL');
+    final String baseUrl;
+    if (definedApiUrl.isNotEmpty) {
+      baseUrl = definedApiUrl;
+    } else if (kReleaseMode) {
+      baseUrl = 'https://expense-trackker-zeta.vercel.app';
+    } else if (!kIsWeb && Platform.isAndroid) {
+      baseUrl = 'http://10.0.2.2:5001';
+    } else {
+      baseUrl = 'http://localhost:5001';
+    }
 
     _dio = Dio(
       BaseOptions(
