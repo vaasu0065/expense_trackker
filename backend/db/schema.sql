@@ -99,3 +99,14 @@ CREATE TABLE IF NOT EXISTS lend_borrow (
   status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('pending', 'settled')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Long-lived keys for phone automations (iPhone Shortcuts). Only the hash is stored,
+-- and a key can only call the auto-import endpoint.
+CREATE TABLE IF NOT EXISTS automation_keys (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  key_hash VARCHAR(64) UNIQUE NOT NULL,
+  key_prefix VARCHAR(16) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_used_at TIMESTAMP
+);

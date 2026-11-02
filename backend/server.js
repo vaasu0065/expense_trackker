@@ -50,6 +50,7 @@ app.use("/expenses", require("./routes/expenseRoutes"));
 app.use("/budget", require("./routes/budgetRoutes"));
 app.use("/lendborrow", require("./routes/lendBorrowRoutes"));
 app.use("/bank", require("./routes/bankRoutes"));
+app.use("/automation", require("./routes/automationRoutes"));
 
 // ALIASES for /api prefix
 app.use("/api/auth", require("./routes/authRoutes"));
@@ -57,6 +58,7 @@ app.use("/api/expenses", require("./routes/expenseRoutes"));
 app.use("/api/budget", require("./routes/budgetRoutes"));
 app.use("/api/lendborrow", require("./routes/lendBorrowRoutes"));
 app.use("/api/bank", require("./routes/bankRoutes"));
+app.use("/api/automation", require("./routes/automationRoutes"));
 
 if (require.main === module) {
   app.listen(process.env.PORT || 5001, () =>

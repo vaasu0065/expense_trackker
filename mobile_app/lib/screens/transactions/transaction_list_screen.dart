@@ -260,7 +260,8 @@ class TransactionRowTile extends StatelessWidget {
     final s = t.source.toLowerCase();
     if (s == 'sms') return 'SMS';
     if (s == 'gmail') return 'Gmail';
-    if (t.isImported) return 'Imported';
+    // Income added in the app is stored as a credit with no source text
+    if (t.isImported) return s.isEmpty ? 'Manual' : 'Imported';
     return 'Manual';
   }
 

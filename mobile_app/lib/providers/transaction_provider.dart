@@ -85,14 +85,24 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<TransactionModel
   }) async {
     try {
       final when = date ?? DateTime.now();
-      final res = await ApiClient.instance.post('/expenses/add', data: {
+      final entry = {
         'title': merchant,
         'amount': amount,
         'category': category,
         'date': when.toIso8601String().split('T')[0],
         // Zero-padded HH:MM so it sorts correctly next to web entries
         'time': '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}',
-      });
+      };
+      // Income is a credit in the transactions ledger (what "Income credited" sums);
+      // /expenses/add would have saved it as an expense.
+      final isIncome = transactionType == 'income' || transactionType == 'credit';
+      final res = isIncome
+          ? await ApiClient.instance.post('/expenses/import', data: {
+              'transactions': [
+                {...entry, 'type': 'credit', 'source': ''}
+              ],
+            })
+          : await ApiClient.instance.post('/expenses/add', data: entry);
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         await fetchTransactions();

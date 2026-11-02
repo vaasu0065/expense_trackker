@@ -10,6 +10,7 @@ import '../../providers/settings_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/format.dart';
 import '../transactions/transaction_list_screen.dart';
+import 'budget_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -97,7 +98,7 @@ class DashboardScreen extends ConsumerWidget {
                   avatar: Icon(LucideIcons.wallet, size: 16, color: c.warning),
                   label: const Text('Budget'),
                   labelPadding: const EdgeInsets.only(left: 4, right: 6),
-                  onPressed: () => context.go('/settings'),
+                  onPressed: () => showBudgetSheet(context),
                 ),
                 ActionChip(
                   avatar: Icon(LucideIcons.receipt, size: 16, color: c.muted),
@@ -232,7 +233,7 @@ class _MonthSummaryCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(child: Text('No monthly budget set', style: tt.bodySmall)),
-                  TextButton(onPressed: () => context.go('/settings'), child: const Text('Set budget')),
+                  TextButton(onPressed: () => showBudgetSheet(context), child: const Text('Set budget')),
                 ],
               ),
             const SizedBox(height: 16),

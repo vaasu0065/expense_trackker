@@ -1,5 +1,6 @@
 const express = require("express");
 const auth = require("../middleware/authMiddleware");
+const automationAuth = require("../middleware/automationAuth");
 const {
   addExpense,
   importExpenses,
@@ -23,7 +24,7 @@ const router = express.Router();
 
 router.post("/add", auth, addExpense);
 router.post("/import", auth, importExpenses);
-router.post("/auto-import", auth, autoImportTransaction);
+router.post("/auto-import", automationAuth, autoImportTransaction);
 router.get("/transactions", auth, getImportedTransactions);
 router.get("/", auth, getExpenses);
 router.get("/monthly", auth, monthlyStats);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Navbar from "./Navbar";
+import AutoImportSetup from "./AutoImportSetup";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import api from "../api";
@@ -521,6 +522,8 @@ export default function ImportTransactions() {
             </ul>
           </section>
         )}
+
+        <AutoImportSetup showToast={showToast} />
 
         {/* Ledger */}
         <section className="card" aria-labelledby="ledger-title">
