@@ -11,6 +11,9 @@ final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   AuthNotifier() : super(const AsyncValue.loading()) {
+    ApiClient.onUnauthorized = () {
+      if (mounted) state = const AsyncValue.data(null);
+    };
     checkLoginStatus();
   }
 

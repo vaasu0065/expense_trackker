@@ -35,7 +35,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<TransactionModel
         combinedList.addAll((rawList as List<dynamic>).map((e) => TransactionModel.fromJson(e)));
       }
 
-      // Also fetch imported transactions from Supabase (SMS / Gmail / Bank imports)
+      // Also fetch imported credits (SMS / bank imports). Imported debits are
+      // already copied into the expense list above, so adding them would double them.
       try {
         final now = DateTime.now();
         final importedRes = await ApiClient.instance.get('/expenses/transactions', queryParameters: {
@@ -45,7 +46,9 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<TransactionModel
         if (importedRes.statusCode == 200 && importedRes.data != null) {
           final impList = importedRes.data['transactions'];
           if (impList is List) {
-            combinedList.addAll(impList.map((e) => TransactionModel.fromJson(e)));
+            combinedList.addAll(impList
+                .where((e) => e['type'] == 'credit')
+                .map((e) => TransactionModel.fromJson(e, isImported: true)));
           }
         }
       } catch (_) {}
@@ -81,12 +84,14 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<TransactionModel
     DateTime? date,
   }) async {
     try {
+      final when = date ?? DateTime.now();
       final res = await ApiClient.instance.post('/expenses/add', data: {
         'title': merchant,
         'amount': amount,
         'category': category,
-        'date': (date ?? DateTime.now()).toIso8601String().split('T')[0],
-        'time': '${(date ?? DateTime.now()).hour}:${(date ?? DateTime.now()).minute.toString().padLeft(2, '0')}',
+        'date': when.toIso8601String().split('T')[0],
+        // Zero-padded HH:MM so it sorts correctly next to web entries
+        'time': '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}',
       });
 
       if (res.statusCode == 200 || res.statusCode == 201) {

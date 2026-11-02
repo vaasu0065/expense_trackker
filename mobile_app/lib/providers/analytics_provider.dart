@@ -16,9 +16,9 @@ final analyticsSummaryProvider = FutureProvider<AnalyticsSummaryModel?>((ref) as
     });
     final monthlyRes = await ApiClient.instance.get('/expenses/monthly', queryParameters: {
       'month': month,
+      'year': year,
     });
     
-    double importedSpent = 0.0;
     double importedIncome = 0.0;
     try {
       final impRes = await ApiClient.instance.get('/expenses/transactions', queryParameters: {
@@ -29,27 +29,26 @@ final analyticsSummaryProvider = FutureProvider<AnalyticsSummaryModel?>((ref) as
         final sumData = impRes.data['summary'];
         if (sumData != null) {
           importedIncome = double.tryParse(sumData['total_credit']?.toString() ?? '0') ?? 0.0;
-          importedSpent = double.tryParse(sumData['total_debit']?.toString() ?? '0') ?? 0.0;
         }
       }
     } catch (_) {}
 
     final summaryRes = await ApiClient.instance.get('/expenses/summary');
     double allTimeTotal = 0.0;
-    int totalCount = 0;
     if (summaryRes.statusCode == 200 && summaryRes.data != null) {
       allTimeTotal = double.tryParse(summaryRes.data['total']?.toString() ?? '0') ?? 0.0;
-      totalCount = int.tryParse(summaryRes.data['count']?.toString() ?? '0') ?? 0;
     }
 
     if (budgetRes.statusCode == 200 && budgetRes.data != null) {
       final bData = budgetRes.data;
       final manualSpent = double.tryParse(bData['spent']?.toString() ?? '0') ?? 0.0;
-      final manualIncome = double.tryParse(bData['income']?.toString() ?? '0') ?? 0.0;
       final budgetLimit = double.tryParse(bData['budget']?.toString() ?? '0') ?? 0.0;
       
-      final monthSpent = manualSpent + importedSpent;
-      final totalIncome = manualIncome + importedIncome;
+      // Imported debits are stored in the expense table too, so manualSpent already counts them
+      final monthSpent = manualSpent;
+      // Credited income = imported credits only, same as the web dashboard.
+      // (bData['income'] is the user's budget-income setting, not money received.)
+      final totalIncome = importedIncome;
       final remaining = budgetLimit > 0 ? (budgetLimit - monthSpent) : 0.0;
       final pct = budgetLimit > 0 ? ((monthSpent / budgetLimit) * 100).round() : 0;
 

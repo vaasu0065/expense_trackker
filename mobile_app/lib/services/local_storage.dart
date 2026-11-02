@@ -26,7 +26,7 @@ class LocalStorage {
     authBox.clear();
   }
 
-  static bool get isDarkMode => settingsBox.get('darkMode', defaultValue: false);
+  static bool get isDarkMode => settingsBox.get('darkMode', defaultValue: true);
   static bool get isSmsTrackingEnabled => settingsBox.get('smsTracking', defaultValue: true);
 
   static void toggleDarkMode(bool value) {

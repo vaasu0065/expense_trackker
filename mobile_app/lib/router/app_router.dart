@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../services/local_storage.dart';
@@ -56,82 +57,26 @@ class MainScaffoldShell extends StatelessWidget {
   final Widget child;
   const MainScaffoldShell({super.key, required this.child});
 
+  static const _paths = ['/dashboard', '/transactions', '/analytics', '/settings'];
+
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    final index = _paths.indexWhere((p) => location.startsWith(p));
+    final border = Theme.of(context).dividerTheme.color;
+
     return Scaffold(
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavButton(icon: Icons.dashboard_rounded, label: 'Home', path: '/dashboard'),
-                _NavButton(icon: Icons.receipt_long_rounded, label: 'Ledger', path: '/transactions'),
-                _NavButton(icon: Icons.pie_chart_rounded, label: 'Analytics', path: '/analytics'),
-                _NavButton(icon: Icons.settings_rounded, label: 'Settings', path: '/settings'),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String path;
-
-  const _NavButton({required this.icon, required this.label, required this.path});
-
-  @override
-  Widget build(BuildContext context) {
-    final current = GoRouterState.of(context).uri.toString();
-    final isSelected = current == path;
-    final primary = Theme.of(context).primaryColor;
-
-    return InkWell(
-      onTap: () => context.go(path),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? primary.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? primary : Colors.grey.shade500,
-              size: 24,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(border: Border(top: BorderSide(color: border ?? Colors.transparent))),
+        child: NavigationBar(
+          selectedIndex: index < 0 ? 0 : index,
+          onDestinationSelected: (i) => context.go(_paths[i]),
+          destinations: const [
+            NavigationDestination(icon: Icon(LucideIcons.layoutDashboard), label: 'Home'),
+            NavigationDestination(icon: Icon(LucideIcons.receipt), label: 'Transactions'),
+            NavigationDestination(icon: Icon(LucideIcons.pieChart), label: 'Analytics'),
+            NavigationDestination(icon: Icon(LucideIcons.settings), label: 'Settings'),
           ],
         ),
       ),

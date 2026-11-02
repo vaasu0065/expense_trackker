@@ -71,16 +71,9 @@ class SmsService {
   static Future<void> _syncToBackend(Map<String, dynamic> payload, String rawText) async {
     try {
       final dio = ApiClient.instance;
-      await dio.post('/transactions/bulk-import', data: {
-        'source': 'sms',
-        'transactions': [
-          {
-            ...payload,
-            'rawText': rawText,
-          }
-        ]
-      });
-      debugPrint("✅ Successfully synced SMS transaction to MongoDB");
+      // The backend parses the raw message itself and skips ones already imported
+      await dio.post('/expenses/auto-import', data: {'message': rawText});
+      debugPrint("✅ Successfully synced SMS transaction to backend");
     } catch (e) {
       debugPrint("❌ Failed to sync SMS transaction to backend: $e");
       // Cache in offline box for retry later when network restores

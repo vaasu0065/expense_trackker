@@ -6,6 +6,9 @@ import 'package:hive/hive.dart';
 class ApiClient {
   static late Dio _dio;
 
+  /// Called when the server rejects the saved session (expired/invalid token).
+  static void Function()? onUnauthorized;
+
   static void init() {
     // 1. Check if an API_URL was passed via `--dart-define=API_URL=...` during build/run
     // 2. If in release mode without override, use production Vercel backend
@@ -46,9 +49,11 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          if (e.response?.statusCode == 401) {
-            // Token expired or invalid, clear box
-            Hive.box('auth').delete('token');
+          final isLoginRequest = e.requestOptions.path.startsWith('/auth/login');
+          if (e.response?.statusCode == 401 && !isLoginRequest) {
+            // Token expired or invalid: clear the session and return to login
+            Hive.box('auth').clear();
+            onUnauthorized?.call();
           }
           return handler.next(e);
         },
