@@ -47,6 +47,10 @@ const ensureTable = async (userId) => {
 
   return table;
 };
+exports.ensureTable = ensureTable;
+
+// Same bank message imported twice should not be stored twice
+const importKey = (t) => `${t.source}|${t.type}|${Number(t.amount)}|${t.date}`;
 
 async function saveImportedTransactions(userId, transactions) {
   const table = await ensureTable(userId);
@@ -69,20 +73,49 @@ async function saveImportedTransactions(userId, transactions) {
       throw err;
     }
 
-    validTransactions.push([userId, type, title, amount, category || "Other", date, time, source]);
-    if (type === "debit") {
-      debitExpenses.push([title, amount, category || "Uncategorized", date, time]);
-    }
+    validTransactions.push({ type, title, amount, category: category || "Other", date, time, source });
   }
+
+  // Skip messages already imported (only possible to detect when the raw source text is known)
+  const sources = [...new Set(validTransactions.map((t) => t.source).filter(Boolean))];
+  const seen = new Set();
+  if (sources.length > 0) {
+    const existing = await pool.query(
+      `SELECT type, amount, date::text AS date, source
+       FROM imported_transactions
+       WHERE user_id = $1 AND source = ANY($2::text[])`,
+      [userId, sources]
+    );
+    existing.rows.forEach((row) => seen.add(importKey(row)));
+  }
+
+  const newTransactions = validTransactions.filter((t) => {
+    if (!t.source) return true;
+    const key = importKey(t);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const skipped = validTransactions.length - newTransactions.length;
+
+  if (newTransactions.length === 0) {
+    return { count: 0, debitCount: 0, creditCount: 0, skipped };
+  }
+
+  newTransactions.forEach((t) => {
+    if (t.type === "debit") {
+      debitExpenses.push([t.title, t.amount, t.category, t.date, t.time]);
+    }
+  });
 
   const transactionPlaceholders = [];
   const transactionValues = [];
-  validTransactions.forEach((transaction, index) => {
+  newTransactions.forEach((t, index) => {
     const offset = index * 8;
     transactionPlaceholders.push(
       `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8})`
     );
-    transactionValues.push(...transaction);
+    transactionValues.push(userId, t.type, t.title, t.amount, t.category, t.date, t.time, t.source);
   });
 
   await pool.query(
@@ -107,9 +140,10 @@ async function saveImportedTransactions(userId, transactions) {
   }
 
   return {
-    count: validTransactions.length,
+    count: newTransactions.length,
     debitCount: debitExpenses.length,
-    creditCount: validTransactions.length - debitExpenses.length,
+    creditCount: newTransactions.length - debitExpenses.length,
+    skipped,
   };
 }
 exports.saveImportedTransactions = saveImportedTransactions;
@@ -120,11 +154,16 @@ exports.addExpense = async (req, res) => {
     const table = await ensureTable(req.user.id);
     const { title, amount, category, date, time } = req.body;
 
+    const parsedAmount = parseFloat(amount);
+
     if (!date) return res.status(400).json({ msg: "Date is required" });
+    if (!String(title || "").trim() || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ msg: "Title and a positive amount are required" });
+    }
 
     await pool.query(
       `INSERT INTO ${table} (title, amount, category, date, time) VALUES($1,$2,$3,$4,$5)`,
-      [title, amount, category || "Uncategorized", date, time || ""]
+      [String(title).trim(), parsedAmount, category || "Uncategorized", date, time || ""]
     );
 
     res.json({ msg: "Expense Added" });
@@ -261,7 +300,8 @@ exports.getExpenses = async (req, res) => {
 exports.filterExpenses = async (req, res) => {
   try {
     const table = await ensureTable(req.user.id);
-    const { date, month, year, category, sort } = req.query;
+    const { date, month, category, sort } = req.query;
+    const year = req.query.year || (month ? new Date().getFullYear() : undefined);
 
     let conditions = [];
     let values = [];
@@ -310,9 +350,11 @@ exports.monthlyStats = async (req, res) => {
   try {
     const table = await ensureTable(req.user.id);
     const { month, category } = req.query;
+    const year = req.query.year || (month ? new Date().getFullYear() : undefined);
     let conditions = [], values = [], i = 1;
 
     if (month) { conditions.push(`EXTRACT(MONTH FROM date) = $${i++}`); values.push(month); }
+    if (year) { conditions.push(`EXTRACT(YEAR FROM date) = $${i++}`); values.push(year); }
     if (category) { conditions.push(`LOWER(category) = LOWER($${i++})`); values.push(category); }
 
     let query = `SELECT category, SUM(amount) as total FROM ${table}`;
@@ -384,7 +426,8 @@ exports.summary = async (req, res) => {
 exports.deleteExpense = async (req, res) => {
   try {
     const table = await ensureTable(req.user.id);
-    await pool.query(`DELETE FROM ${table} WHERE id=$1`, [req.params.id]);
+    const result = await pool.query(`DELETE FROM ${table} WHERE id=$1`, [req.params.id]);
+    if (result.rowCount === 0) return res.status(404).json({ msg: "Expense not found" });
     res.json({ msg: "Expense Deleted" });
   } catch (err) {
     console.error(err);
@@ -397,10 +440,17 @@ exports.updateExpense = async (req, res) => {
   try {
     const table = await ensureTable(req.user.id);
     const { title, amount, category, date, time } = req.body;
-    await pool.query(
+    const parsedAmount = parseFloat(amount);
+
+    if (!String(title || "").trim() || !date || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ msg: "Title, a positive amount and date are required" });
+    }
+
+    const result = await pool.query(
       `UPDATE ${table} SET title=$1, amount=$2, category=$3, date=$4, time=$5 WHERE id=$6`,
-      [title, amount, category, date, time || "", req.params.id]
+      [String(title).trim(), parsedAmount, category || "Uncategorized", date, time || "", req.params.id]
     );
+    if (result.rowCount === 0) return res.status(404).json({ msg: "Expense not found" });
     res.json({ msg: "Expense Updated" });
   } catch (err) {
     console.error(err);

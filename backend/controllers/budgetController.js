@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { ensureTable } = require("./expenseController");
 
 // ⭐ SAVE / UPDATE BUDGET
 exports.setBudget = async (req,res)=>{
@@ -42,7 +43,8 @@ exports.setBudget = async (req,res)=>{
 // ⭐ GET BUDGET SUMMARY
 exports.getBudget = async (req,res)=>{
   try {
-    const { month, year } = req.query;
+    const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+    const year = parseInt(req.query.year) || new Date().getFullYear();
     const userId = req.user.id;
 
     // Get budget record
@@ -54,19 +56,8 @@ exports.getBudget = async (req,res)=>{
 
     const budgetData = budgetRes.rows[0] || { income:0, budget:0 };
 
-    // Get user's expense table name safely
-    const userRes = await pool.query(
-      "SELECT name FROM users WHERE id=$1",
-      [userId]
-    );
-
-    let name = userRes.rows[0]?.name || "user";
-    name = name
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "");
-
-    const table = `expenses_${name}_${userId}`;
+    // Creates the expense table if the user has none yet, instead of failing
+    const table = await ensureTable(userId);
 
     // Get total spent
     const expenseRes = await pool.query(`
@@ -75,13 +66,13 @@ exports.getBudget = async (req,res)=>{
       AND EXTRACT(YEAR FROM date)=$2
     `, [month, year]);
 
-    const totalExpense = expenseRes.rows[0]?.total || 0;
+    const totalExpense = parseFloat(expenseRes.rows[0]?.total) || 0;
 
     res.json({
       income: budgetData.income,
       budget: budgetData.budget,
       spent: totalExpense,
-      remaining: budgetData.budget - totalExpense
+      remaining: (parseFloat(budgetData.budget) || 0) - totalExpense
     });
 
   } catch(err){

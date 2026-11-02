@@ -4,10 +4,23 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const rateLimit = require("express-rate-limit");
 const auth = require("../middleware/authMiddleware");
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
 const resetCodeTtlMinutes = 10;
+const maxResetAttempts = 5;
+const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+
+// Best-effort per-IP throttling (in-memory, so per serverless instance).
+// Reset codes are additionally capped per code in the database.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { msg: "Too many attempts. Please try again in 15 minutes." },
+});
 
 function createResetCode() {
   return crypto.randomInt(100000, 1000000).toString();
@@ -34,6 +47,12 @@ function emailIsConfigured() {
 
 async function sendPasswordResetEmail(email, code) {
   if (!emailIsConfigured()) {
+    // Never fall back to logging codes in production: anyone with log access could reset accounts
+    if (isProduction) {
+      const err = new Error("Password reset email is not configured on the server");
+      err.statusCode = 503;
+      throw err;
+    }
     console.log(`Password reset code for ${email}: ${code}`);
     return;
   }
@@ -65,7 +84,7 @@ async function sendPasswordResetEmail(email, code) {
 }
 
 // REGISTER USER (no OTP – direct signup)
-router.post("/register", async (req, res) => {
+router.post("/register", authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -126,7 +145,7 @@ router.post("/register", async (req, res) => {
 
 
 // LOGIN USER
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET is not set in .env");
@@ -144,21 +163,18 @@ router.post("/login", async (req, res) => {
       [email]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(401).json({ msg: "User not found. Check email or register first." });
-    }
-
     const user = result.rows[0];
+    const validPassword = user ? await bcrypt.compare(password, user.password) : false;
 
-    const validPassword = await bcrypt.compare(password, user.password);
-
+    // Same response for unknown email and wrong password, so emails can't be probed
     if (!validPassword) {
-      return res.status(401).json({ msg: "Wrong password" });
+      return res.status(401).json({ msg: "Invalid email or password" });
     }
 
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
 
     res.json({
@@ -198,7 +214,7 @@ router.get("/me", auth, async (req, res)=>{
 });
 
 // FORGOT PASSWORD – send one-time reset code
-router.post("/forgot-password/verify-email", async (req, res) => {
+router.post("/forgot-password/verify-email", authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email?.trim()) return res.status(400).json({ msg: "Email is required" });
@@ -209,8 +225,13 @@ router.post("/forgot-password/verify-email", async (req, res) => {
       [normalizedEmail]
     );
 
+    const genericMsg = emailIsConfigured()
+      ? "If an account exists for this email, a reset code has been sent"
+      : "Reset code generated. Check the backend console.";
+
+    // Respond the same way whether or not the account exists
     if (result.rowCount === 0) {
-      return res.status(404).json({ msg: "No account found with this email" });
+      return res.json({ msg: genericMsg, email: normalizedEmail });
     }
 
     const code = createResetCode();
@@ -228,20 +249,15 @@ router.post("/forgot-password/verify-email", async (req, res) => {
 
     await sendPasswordResetEmail(normalizedEmail, code);
 
-    res.json({
-      msg: emailIsConfigured()
-        ? "Reset code sent to your email"
-        : "Reset code generated. Check the backend console.",
-      email: normalizedEmail,
-    });
+    res.json({ msg: genericMsg, email: normalizedEmail });
   } catch (err) {
     console.error("Send reset code error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(err.statusCode || 500).json({ msg: err.statusCode ? err.message : "Server error" });
   }
 });
 
 // RESET PASSWORD
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", authLimiter, async (req, res) => {
   try {
     const { email, resetCode, newPassword } = req.body;
 
@@ -255,26 +271,37 @@ router.post("/reset-password", async (req, res) => {
 
     const normalizedEmail = normalizeEmail(email);
     const codeHash = hashResetCode(normalizedEmail, resetCode.trim());
-    const userResult = await pool.query(
-      "SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))",
+
+    // Count this guess atomically before checking it, so parallel guesses can't exceed the cap
+    const codeResult = await pool.query(
+      `UPDATE password_reset_codes
+       SET attempts = attempts + 1
+       WHERE id = (
+         SELECT id FROM password_reset_codes
+         WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+           AND expires_at > NOW()
+         ORDER BY created_at DESC
+         LIMIT 1
+       )
+       RETURNING id, code_hash, attempts`,
       [normalizedEmail]
     );
 
-    if (userResult.rowCount === 0) {
-      return res.status(404).json({ msg: "No account found with this email" });
+    const storedCode = codeResult.rows[0];
+    if (!storedCode) {
+      return res.status(400).json({ msg: "Invalid or expired reset code" });
     }
 
-    const codeResult = await pool.query(
-      `SELECT id FROM password_reset_codes
-       WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
-         AND code_hash = $2
-         AND expires_at > NOW()
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [normalizedEmail, codeHash]
-    );
+    if (storedCode.attempts > maxResetAttempts) {
+      await pool.query("DELETE FROM password_reset_codes WHERE id = $1", [storedCode.id]);
+      return res.status(429).json({ msg: "Too many wrong attempts. Please request a new code." });
+    }
 
-    if (codeResult.rowCount === 0) {
+    const codeMatches = crypto.timingSafeEqual(
+      Buffer.from(storedCode.code_hash, "hex"),
+      Buffer.from(codeHash, "hex")
+    );
+    if (!codeMatches) {
       return res.status(400).json({ msg: "Invalid or expired reset code" });
     }
 

@@ -6,6 +6,8 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
+// Behind Vercel's proxy: needed so rate limiting sees the real client IP
+app.set("trust proxy", 1);
 
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);

@@ -23,8 +23,12 @@ CREATE TABLE IF NOT EXISTS password_reset_codes (
   email VARCHAR(255) NOT NULL,
   code_hash VARCHAR(64) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Track failed guesses so a reset code cannot be brute-forced
+ALTER TABLE password_reset_codes ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
 
 -- Create imported transaction ledger table
 CREATE TABLE IF NOT EXISTS imported_transactions (

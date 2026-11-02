@@ -1,4 +1,8 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
+
+// Return DATE columns as plain "YYYY-MM-DD" strings instead of JS Dates at
+// server-local midnight, so dates never shift with the server/client timezone.
+types.setTypeParser(1082, (value) => value);
 
 const poolConfig = {
   host: process.env.DB_HOST,
