@@ -14,13 +14,21 @@
   }
 
   body {
-    @apply bg-ink-950 text-slate-100 font-sans antialiased min-h-screen;
-    background-image: radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.08), transparent 60%);
+    @apply bg-ink-950 text-stone-100 font-sans antialiased min-h-screen;
+    background-image:
+      radial-gradient(900px 520px at 85% -12%, rgba(214, 179, 106, 0.10), transparent 60%),
+      radial-gradient(700px 480px at -10% 10%, rgba(214, 179, 106, 0.05), transparent 60%);
     background-attachment: fixed;
   }
 
   ::selection {
-    @apply bg-brand-500/40 text-white;
+    @apply bg-brand-400/35 text-white;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
   }
 
   /* Keyboard users always get a visible focus ring */
@@ -61,15 +69,30 @@
     @apply mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
   }
   .page-title {
-    @apply text-2xl font-semibold tracking-tight text-white sm:text-3xl;
+    @apply font-display text-[2rem] font-normal leading-tight tracking-normal text-white sm:text-[2.5rem];
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-400;
   }
   .page-subtitle {
-    @apply mt-1 text-sm text-slate-400 sm:text-base;
+    @apply mt-1 text-sm text-stone-400 sm:text-base;
   }
 
   /* Surfaces */
+  /* Cards get a faint top-down sheen so they read as lit, not flat */
   .card {
-    @apply rounded-2xl border border-white/[0.08] bg-ink-900 shadow-card;
+    @apply rounded-2xl border border-white/[0.07] bg-ink-900 shadow-card;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0) 45%);
+  }
+  .card-gold {
+    @apply card relative overflow-hidden border-brand-400/20;
+    background-image:
+      radial-gradient(420px 200px at 100% 0%, rgba(214, 179, 106, 0.14), transparent 70%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 45%);
+  }
+  .card-gold::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-brand-300/60 to-transparent;
   }
   .card-pad {
     @apply p-5 sm:p-6;
@@ -78,10 +101,10 @@
     @apply mb-5 flex items-start justify-between gap-4;
   }
   .card-title {
-    @apply text-base font-semibold text-white sm:text-lg;
+    @apply text-base font-bold text-white sm:text-lg;
   }
   .card-subtitle {
-    @apply mt-0.5 text-sm text-slate-400;
+    @apply mt-0.5 text-sm text-stone-400;
   }
   .divider {
     @apply border-t border-white/[0.08];
@@ -89,16 +112,16 @@
 
   /* KPI tiles */
   .kpi {
-    @apply card p-4 sm:p-5;
+    @apply card p-4 transition-colors duration-200 hover:border-brand-400/25 sm:p-5;
   }
   .kpi-label {
-    @apply text-xs font-medium uppercase tracking-wider text-slate-400;
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400;
   }
   .kpi-value {
-    @apply mt-2 text-2xl font-semibold tracking-tight text-white tabular-nums sm:text-[1.75rem];
+    @apply mt-3 text-2xl font-bold tracking-tight text-white tabular-nums sm:text-[1.875rem];
   }
   .kpi-hint {
-    @apply mt-1 text-xs text-slate-400;
+    @apply mt-1 text-xs text-stone-400;
   }
   .icon-tile {
     @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl;
@@ -117,16 +140,16 @@
 
   /* Forms */
   .label {
-    @apply mb-1.5 block text-sm font-medium text-slate-300;
+    @apply mb-1.5 block text-sm font-medium text-stone-300;
   }
   .input {
-    @apply block w-full min-h-[44px] rounded-xl border border-white/10 bg-ink-850 px-3.5 py-2.5 text-[15px] text-white placeholder:text-slate-500 transition-colors duration-150 hover:border-white/20 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply block w-full min-h-[44px] rounded-xl border border-white/10 bg-ink-850 px-3.5 py-2.5 text-[15px] text-white placeholder:text-stone-500 transition-colors duration-150 hover:border-white/20 focus:border-brand-400/70 focus:bg-ink-800 focus:outline-none focus:ring-4 focus:ring-brand-400/15 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .select {
     @apply input pr-9;
   }
   .field-hint {
-    @apply mt-1.5 text-xs text-slate-500;
+    @apply mt-1.5 text-xs text-stone-500;
   }
   .field-error {
     @apply mt-1.5 text-xs text-expense-400;
@@ -137,13 +160,13 @@
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700;
+    @apply btn bg-gradient-to-b from-brand-300 to-brand-500 text-ink-950 shadow-gold hover:from-brand-200 hover:to-brand-400 active:to-brand-600;
   }
   .btn-secondary {
-    @apply btn border border-white/10 bg-ink-850 text-slate-100 hover:border-white/20 hover:bg-ink-800;
+    @apply btn border border-white/10 bg-ink-850 text-stone-100 hover:border-white/20 hover:bg-ink-800;
   }
   .btn-ghost {
-    @apply btn text-slate-300 hover:bg-white/5 hover:text-white;
+    @apply btn text-stone-300 hover:bg-white/5 hover:text-white;
   }
   .btn-success {
     @apply btn bg-income-600 text-white hover:bg-income-500;
@@ -155,7 +178,7 @@
     @apply min-h-[36px] px-3 py-1.5 text-xs;
   }
   .btn-icon {
-    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors duration-150 hover:bg-white/5 hover:text-white;
+    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-stone-400 transition-colors duration-150 hover:bg-white/5 hover:text-white;
   }
 
   /* Badges */
@@ -163,10 +186,10 @@
     @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
   .badge-neutral {
-    @apply badge bg-white/[0.06] text-slate-300;
+    @apply badge bg-white/[0.06] text-stone-300;
   }
   .badge-brand {
-    @apply badge bg-brand-500/15 text-brand-300;
+    @apply badge bg-brand-400/15 text-brand-300;
   }
   .badge-income {
     @apply badge bg-income-500/15 text-income-300;
@@ -175,7 +198,7 @@
     @apply badge bg-expense-500/15 text-expense-300;
   }
   .badge-warning {
-    @apply badge bg-amber-500/15 text-amber-300;
+    @apply badge bg-orange-500/15 text-orange-300;
   }
 
   /* Segmented control / tabs */
@@ -183,10 +206,15 @@
     @apply inline-flex rounded-xl border border-white/10 bg-ink-850 p-1;
   }
   .segmented-item {
-    @apply min-h-[36px] rounded-lg px-3 text-sm font-medium text-slate-400 transition-colors duration-150 hover:text-white;
+    @apply min-h-[36px] rounded-lg px-3 text-sm font-medium text-stone-400 transition-colors duration-150 hover:text-white;
   }
   .segmented-item-active {
-    @apply bg-ink-700 text-white;
+    @apply bg-ink-700 text-brand-200 shadow-card;
+  }
+
+  /* Gold logo tile used by the navbar and auth screens */
+  .brand-mark {
+    @apply flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-200 via-brand-400 to-brand-600 text-ink-950 shadow-gold;
   }
 
   /* Tables */
@@ -194,10 +222,10 @@
     @apply w-full text-left text-sm;
   }
   .table thead th {
-    @apply border-b border-white/[0.08] px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-400;
+    @apply border-b border-white/[0.08] px-4 py-3 text-xs font-medium uppercase tracking-wider text-stone-400;
   }
   .table tbody td {
-    @apply border-b border-white/[0.05] px-4 py-3.5 text-slate-200;
+    @apply border-b border-white/[0.05] px-4 py-3.5 text-stone-200;
   }
   .table tbody tr {
     @apply transition-colors duration-150 hover:bg-white/[0.03];
@@ -205,7 +233,7 @@
 
   /* States */
   .empty-state {
-    @apply flex flex-col items-center justify-center gap-2 px-6 py-12 text-center text-sm text-slate-400;
+    @apply flex flex-col items-center justify-center gap-2 px-6 py-12 text-center text-sm text-stone-400;
   }
   .skeleton {
     @apply animate-pulse rounded-lg bg-white/[0.06];
@@ -229,12 +257,12 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #22304d;
+  background: #2e2e34;
   border-radius: 9999px;
-  border: 2px solid #020617;
+  border: 2px solid #0b0b0d;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #44403c;
 }
 
 /* Respect users who prefer less motion */

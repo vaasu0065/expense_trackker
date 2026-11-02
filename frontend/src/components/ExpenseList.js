@@ -195,7 +195,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
           {/* Filters toolbar */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))]">
             <div className="col-span-2 md:col-span-1">
-              <label htmlFor="ledger-date" className="mb-1 block text-xs font-medium text-slate-400">
+              <label htmlFor="ledger-date" className="mb-1 block text-xs font-medium text-stone-400">
                 Date
               </label>
               <div className="flex gap-2">
@@ -219,7 +219,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
             </div>
 
             <div className="col-span-2 md:col-span-1">
-              <label htmlFor="ledger-category" className="mb-1 block text-xs font-medium text-slate-400">
+              <label htmlFor="ledger-category" className="mb-1 block text-xs font-medium text-stone-400">
                 Category
               </label>
               <select
@@ -236,7 +236,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
             </div>
 
             <div>
-              <label htmlFor="ledger-month" className="mb-1 block text-xs font-medium text-slate-400">
+              <label htmlFor="ledger-month" className="mb-1 block text-xs font-medium text-stone-400">
                 Month
               </label>
               <select
@@ -255,7 +255,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
             </div>
 
             <div>
-              <label htmlFor="ledger-sort" className="mb-1 block text-xs font-medium text-slate-400">
+              <label htmlFor="ledger-sort" className="mb-1 block text-xs font-medium text-stone-400">
                 Sort by
               </label>
               <select
@@ -291,8 +291,8 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
           </ul>
         ) : expenses.length === 0 ? (
           <div className="empty-state">
-            <Receipt className="h-8 w-8 text-slate-500" aria-hidden="true" />
-            <p className="font-medium text-slate-200">No transactions found</p>
+            <Receipt className="h-8 w-8 text-stone-500" aria-hidden="true" />
+            <p className="font-medium text-stone-200">No transactions found</p>
             <p>
               {selectedDate
                 ? "Nothing recorded on this date. Try another date or clear the filter."
@@ -331,10 +331,10 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                   {expenses.map((e) => (
                     <tr key={e.id}>
                       <td className="!pl-6">
-                        <div className="whitespace-nowrap font-medium tabular-nums text-slate-100" title={formatDate(e.date)}>
+                        <div className="whitespace-nowrap font-medium tabular-nums text-stone-100" title={formatDate(e.date)}>
                           {shortDate(e.date)}
                         </div>
-                        <div className="text-xs tabular-nums text-slate-500">{e.time || "—"}</div>
+                        <div className="text-xs tabular-nums text-stone-500">{e.time || "—"}</div>
                       </td>
                       <td>
                         <p className="truncate font-medium text-white" title={e.title}>{e.title}</p>
@@ -364,7 +364,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                       <span className="amount-out shrink-0 whitespace-nowrap">−{formatCurrency(e.amount)}</span>
                     </div>
                     <div className="mt-1.5 flex items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                      <div className="flex min-w-0 items-center gap-2 text-xs text-stone-400">
                         <span className="badge-neutral max-w-[45vw] truncate">{e.category || "General"}</span>
                         <span className="whitespace-nowrap tabular-nums">
                           {shortDate(e.date)}

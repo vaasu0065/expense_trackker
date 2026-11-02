@@ -341,7 +341,7 @@ export default function ImportTransactions() {
           <div className="kpi col-span-2 lg:col-span-1">
             <div className="flex items-center justify-between gap-2">
               <span className="kpi-label">Net cash flow</span>
-              <Scale className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              <Scale className="h-4 w-4 text-stone-400" aria-hidden="true" />
             </div>
             <p className={`kpi-value ${net > 0 ? "text-income-400" : net < 0 ? "text-expense-400" : ""}`}>
               {net > 0 ? "+" : net < 0 ? "−" : ""}
@@ -423,10 +423,10 @@ export default function ImportTransactions() {
                         className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-brand-500"
                       />
                       <label htmlFor={fid("selected")} className="min-w-0 flex-1 cursor-pointer">
-                        <span className="block text-xs font-medium text-slate-400">
+                        <span className="block text-xs font-medium text-stone-400">
                           Message {index + 1} · {item.selected ? "Will be imported" : "Skipped"}
                         </span>
-                        <span className="mt-0.5 block break-words font-mono text-xs leading-relaxed text-slate-300">
+                        <span className="mt-0.5 block break-words font-mono text-xs leading-relaxed text-stone-300">
                           {item.source}
                         </span>
                       </label>
@@ -447,7 +447,7 @@ export default function ImportTransactions() {
                       }`}
                     >
                       <div>
-                        <label htmlFor={fid("type")} className="mb-1 block text-xs font-medium text-slate-400">Type</label>
+                        <label htmlFor={fid("type")} className="mb-1 block text-xs font-medium text-stone-400">Type</label>
                         <select
                           id={fid("type")}
                           value={item.type}
@@ -461,7 +461,7 @@ export default function ImportTransactions() {
                         </select>
                       </div>
                       <div className="col-span-2 row-start-1 md:col-span-1 md:row-start-auto">
-                        <label htmlFor={fid("title")} className="mb-1 block text-xs font-medium text-slate-400">Title / payee</label>
+                        <label htmlFor={fid("title")} className="mb-1 block text-xs font-medium text-stone-400">Title / payee</label>
                         <input
                           id={fid("title")}
                           value={item.title}
@@ -470,7 +470,7 @@ export default function ImportTransactions() {
                         />
                       </div>
                       <div>
-                        <label htmlFor={fid("amount")} className="mb-1 block text-xs font-medium text-slate-400">Amount (₹)</label>
+                        <label htmlFor={fid("amount")} className="mb-1 block text-xs font-medium text-stone-400">Amount (₹)</label>
                         <input
                           id={fid("amount")}
                           type="number"
@@ -483,7 +483,7 @@ export default function ImportTransactions() {
                         />
                       </div>
                       <div>
-                        <label htmlFor={fid("category")} className="mb-1 block text-xs font-medium text-slate-400">Category</label>
+                        <label htmlFor={fid("category")} className="mb-1 block text-xs font-medium text-stone-400">Category</label>
                         <select
                           id={fid("category")}
                           value={item.category}
@@ -496,7 +496,7 @@ export default function ImportTransactions() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor={fid("date")} className="mb-1 block text-xs font-medium text-slate-400">Date</label>
+                        <label htmlFor={fid("date")} className="mb-1 block text-xs font-medium text-stone-400">Date</label>
                         <input
                           id={fid("date")}
                           type="date"
@@ -506,7 +506,7 @@ export default function ImportTransactions() {
                         />
                       </div>
                       <div>
-                        <label htmlFor={fid("time")} className="mb-1 block text-xs font-medium text-slate-400">Time</label>
+                        <label htmlFor={fid("time")} className="mb-1 block text-xs font-medium text-stone-400">Time</label>
                         <input
                           id={fid("time")}
                           type="time"
@@ -539,10 +539,10 @@ export default function ImportTransactions() {
 
           {ledger.length === 0 ? (
             <div className="empty-state">
-              <div className="icon-tile mb-2 bg-white/[0.06] text-slate-400">
+              <div className="icon-tile mb-2 bg-white/[0.06] text-stone-400">
                 <Layers className="h-5 w-5" aria-hidden="true" />
               </div>
-              <p className="text-base font-medium text-slate-200">No imported transactions</p>
+              <p className="text-base font-medium text-stone-200">No imported transactions</p>
               <p className="max-w-sm">Nothing was imported for {periodLabel}. Paste messages above or pick another month.</p>
             </div>
           ) : (
@@ -571,9 +571,9 @@ export default function ImportTransactions() {
                             </span>
                           </td>
                           <td className="max-w-[18rem] truncate font-medium text-white" title={item.title}>{item.title}</td>
-                          <td className="text-slate-300">{item.category}</td>
-                          <td className="whitespace-nowrap tabular-nums text-slate-300">{formatLedgerDate(item.date)}</td>
-                          <td className="tabular-nums text-slate-400">{item.time || "—"}</td>
+                          <td className="text-stone-300">{item.category}</td>
+                          <td className="whitespace-nowrap tabular-nums text-stone-300">{formatLedgerDate(item.date)}</td>
+                          <td className="tabular-nums text-stone-400">{item.time || "—"}</td>
                           <td className={`!pr-6 whitespace-nowrap text-right ${credit ? "amount-in" : "amount-out"}`}>
                             {credit ? "+" : "−"}{formatCurrency(item.amount)}
                           </td>
@@ -592,7 +592,7 @@ export default function ImportTransactions() {
                     <li key={item.id} className="flex items-start gap-3 border-b border-white/[0.05] px-5 py-4 last:border-0">
                       <div className="min-w-0 flex-1">
                         <p className="break-words text-[15px] font-medium text-white">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <p className="mt-0.5 text-xs text-stone-400">
                           {item.category} · {formatLedgerDate(item.date)}
                           {item.time ? ` · ${item.time}` : ""}
                         </p>

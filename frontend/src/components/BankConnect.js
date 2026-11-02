@@ -65,7 +65,7 @@ function Step({ number, state, title, description, children }) {
   return (
     <li
       className={`flex gap-4 rounded-xl border p-4 sm:p-5 md:flex-col ${
-        state === "current" ? "border-brand-500/40 bg-brand-500/[0.06]" : "border-white/[0.08] bg-ink-850/60"
+        state === "current" ? "border-brand-400/40 bg-brand-400/[0.06]" : "border-white/[0.08] bg-ink-850/60"
       }`}
       aria-current={state === "current" ? "step" : undefined}
     >
@@ -74,15 +74,15 @@ function Step({ number, state, title, description, children }) {
           state === "done"
             ? "bg-income-500/15 text-income-400"
             : state === "current"
-            ? "bg-brand-500 text-white"
-            : "bg-white/[0.06] text-slate-400"
+            ? "bg-brand-400 text-ink-950"
+            : "bg-white/[0.06] text-stone-400"
         }`}
       >
         {state === "done" ? <Check className="h-4 w-4" aria-label="Done" /> : number}
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className={`text-[15px] font-semibold ${state === "upcoming" ? "text-slate-300" : "text-white"}`}>{title}</h3>
-        <p className="mt-1 text-sm text-slate-400">{description}</p>
+        <h3 className={`text-[15px] font-semibold ${state === "upcoming" ? "text-stone-300" : "text-white"}`}>{title}</h3>
+        <p className="mt-1 text-sm text-stone-400">{description}</p>
         {children && <div className="mt-4 md:mt-auto md:pt-4">{children}</div>}
       </div>
     </li>
@@ -261,26 +261,26 @@ export default function BankConnect() {
 
           <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-3">
             <div className="bg-ink-900 p-4">
-              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Linked account</dt>
-              <dd className={`mt-1.5 text-[15px] ${connection?.account_mask ? "font-mono text-white" : "text-slate-500"}`}>
+              <dt className="text-xs font-medium uppercase tracking-wider text-stone-400">Linked account</dt>
+              <dd className={`mt-1.5 text-[15px] ${connection?.account_mask ? "font-mono text-white" : "text-stone-500"}`}>
                 {connection?.account_mask || "No account linked"}
               </dd>
             </div>
             <div className="bg-ink-900 p-4">
-              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Last synced</dt>
-              <dd className={`mt-1.5 text-[15px] tabular-nums ${synced ? "text-white" : "text-slate-500"}`}>
+              <dt className="text-xs font-medium uppercase tracking-wider text-stone-400">Last synced</dt>
+              <dd className={`mt-1.5 text-[15px] tabular-nums ${synced ? "text-white" : "text-stone-500"}`}>
                 {formatDateTime(connection?.last_synced_at)}
               </dd>
             </div>
             <div className="min-w-0 bg-ink-900 p-4">
-              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Consent ID</dt>
-              <dd className={`mt-1.5 break-all ${connection?.consent_id ? "font-mono text-sm text-slate-200" : "text-[15px] text-slate-500"}`}>
+              <dt className="text-xs font-medium uppercase tracking-wider text-stone-400">Consent ID</dt>
+              <dd className={`mt-1.5 break-all ${connection?.consent_id ? "font-mono text-sm text-stone-200" : "text-[15px] text-stone-500"}`}>
                 {connection?.consent_id || "Not assigned"}
               </dd>
             </div>
           </dl>
 
-          <p className="mt-4 flex items-start gap-2 text-xs text-slate-400">
+          <p className="mt-4 flex items-start gap-2 text-xs text-stone-400">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             Synced transactions are added to your ledger as credits and debits. Duplicates are skipped.
           </p>
@@ -317,7 +317,7 @@ export default function BankConnect() {
 
             {lastSync.newTransactions?.length > 0 ? (
               <>
-                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-400">Synced transactions</h3>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-stone-400">Synced transactions</h3>
                 <ul className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.08]">
                   {lastSync.newTransactions.map((item) => {
                     const credit = item.type === "credit";
@@ -334,7 +334,7 @@ export default function BankConnect() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[15px] font-medium text-white">{item.title}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-stone-400">
                             {credit ? "Credit" : "Debit"} · {formatDay(item.date)}
                             {item.time ? ` at ${item.time}` : ""}
                           </p>
@@ -349,7 +349,7 @@ export default function BankConnect() {
               </>
             ) : (
               <div className="empty-state rounded-xl border border-dashed border-white/10">
-                <Inbox className="h-6 w-6 text-slate-500" aria-hidden="true" />
+                <Inbox className="h-6 w-6 text-stone-500" aria-hidden="true" />
                 <p>No new transactions were found in this sync.</p>
               </div>
             )}

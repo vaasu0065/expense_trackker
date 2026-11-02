@@ -20,7 +20,7 @@ function CopyField({ id, label, value, onCopy, copiedId }) {
       <div className="flex gap-2">
         <code
           aria-labelledby={`${id}-label`}
-          className="flex min-h-[44px] min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-xl border border-white/10 bg-ink-850 px-3.5 font-mono text-sm text-slate-100"
+          className="flex min-h-[44px] min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-xl border border-white/10 bg-ink-850 px-3.5 font-mono text-sm text-stone-100"
         >
           {value}
         </code>
@@ -132,21 +132,21 @@ export default function AutoImportSetup({ showToast }) {
         ) : key ? (
           <dl className="grid grid-cols-3 gap-4 text-sm sm:gap-8">
             <div>
-              <dt className="text-xs text-slate-400">Key</dt>
-              <dd className="mt-0.5 font-mono text-slate-100">{key.key_prefix}…</dd>
+              <dt className="text-xs text-stone-400">Key</dt>
+              <dd className="mt-0.5 font-mono text-stone-100">{key.key_prefix}…</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Created</dt>
-              <dd className="mt-0.5 text-slate-100">{formatWhen(key.created_at)}</dd>
+              <dt className="text-xs text-stone-400">Created</dt>
+              <dd className="mt-0.5 text-stone-100">{formatWhen(key.created_at)}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Last used</dt>
-              <dd className="mt-0.5 text-slate-100">{formatWhen(key.last_used_at)}</dd>
+              <dt className="text-xs text-stone-400">Last used</dt>
+              <dd className="mt-0.5 text-stone-100">{formatWhen(key.last_used_at)}</dd>
             </div>
           </dl>
         ) : (
-          <p className="flex items-center gap-2 text-sm text-slate-300">
-            <KeyRound className="h-4 w-4 text-slate-400" aria-hidden />
+          <p className="flex items-center gap-2 text-sm text-stone-300">
+            <KeyRound className="h-4 w-4 text-stone-400" aria-hidden />
             Create a key for your automation. It can only add transactions, nothing else.
           </p>
         )}
@@ -167,8 +167,8 @@ export default function AutoImportSetup({ showToast }) {
       {/* Values to paste into Shortcuts */}
       <div className="mb-6 space-y-4">
         {newKey && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-300">
+          <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4">
+            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-orange-300">
               <AlertTriangle className="h-4 w-4" aria-hidden />
               Copy this now. For your security it won't be shown again.
             </p>
@@ -180,17 +180,17 @@ export default function AutoImportSetup({ showToast }) {
 
       {/* Steps */}
       <h3 className="mb-3 text-sm font-semibold text-white">Set up the automation</h3>
-      <ol className="space-y-3 text-sm text-slate-300">
+      <ol className="space-y-3 text-sm text-stone-300">
         {[
           <>Open the <strong className="text-white">Shortcuts</strong> app, go to <strong className="text-white">Automation</strong>, tap <strong className="text-white">+</strong> and choose <strong className="text-white">Message</strong>.</>,
-          <>Set <strong className="text-white">Message Contains</strong> to <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-slate-100">debited</code> (optionally pick your bank as the sender). Choose <strong className="text-white">Run Immediately</strong>, then <strong className="text-white">Next</strong>.</>,
+          <>Set <strong className="text-white">Message Contains</strong> to <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">debited</code> (optionally pick your bank as the sender). Choose <strong className="text-white">Run Immediately</strong>, then <strong className="text-white">Next</strong>.</>,
           <>Create a <strong className="text-white">New Blank Automation</strong> and add the action <strong className="text-white">Get Contents of URL</strong>. Paste the URL above.</>,
-          <>Tap the arrow to show more. Set <strong className="text-white">Method</strong> to POST. Add a header named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-slate-100">Authorization</code> with the header value from this page.</>,
-          <>Set <strong className="text-white">Request Body</strong> to JSON, add a Text field named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-slate-100">message</code>, and set its value to the <strong className="text-white">Shortcut Input</strong> variable (the message content).</>,
-          <>Tap <strong className="text-white">Done</strong>. Repeat with <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-slate-100">credited</code> to import incoming money too. When a bank SMS arrives, <strong className="text-white">Last used</strong> above updates and the transaction appears in your ledger.</>,
+          <>Tap the arrow to show more. Set <strong className="text-white">Method</strong> to POST. Add a header named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">Authorization</code> with the header value from this page.</>,
+          <>Set <strong className="text-white">Request Body</strong> to JSON, add a Text field named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">message</code>, and set its value to the <strong className="text-white">Shortcut Input</strong> variable (the message content).</>,
+          <>Tap <strong className="text-white">Done</strong>. Repeat with <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">credited</code> to import incoming money too. When a bank SMS arrives, <strong className="text-white">Last used</strong> above updates and the transaction appears in your ledger.</>,
         ].map((step, i) => (
           <li key={i} className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-700 text-xs font-semibold text-slate-200">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-700 text-xs font-semibold text-stone-200">
               {i + 1}
             </span>
             <span className="pt-0.5 leading-relaxed">{step}</span>

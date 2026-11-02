@@ -72,7 +72,7 @@ export default function AddExpense({ onAdded }) {
             <label htmlFor="add-amount" className="label">Amount</label>
             <div className="relative">
               <span
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] text-slate-400"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] text-stone-400"
                 aria-hidden="true"
               >
                 ₹
@@ -116,7 +116,7 @@ export default function AddExpense({ onAdded }) {
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div role="group" aria-labelledby="quick-cat-label" className="flex flex-wrap items-center gap-2">
-            <span id="quick-cat-label" className="mr-1 text-xs font-medium text-slate-400">
+            <span id="quick-cat-label" className="mr-1 text-xs font-medium text-stone-400">
               Quick pick
             </span>
             {POPULAR_CATEGORIES.map((cat) => {
@@ -130,7 +130,7 @@ export default function AddExpense({ onAdded }) {
                   className={`min-h-[36px] rounded-full border px-3 text-xs font-medium transition-colors duration-150 ${
                     active
                       ? "border-brand-400/60 bg-brand-500/15 text-brand-300"
-                      : "border-white/10 bg-ink-850 text-slate-300 hover:border-white/20 hover:text-white"
+                      : "border-white/10 bg-ink-850 text-stone-300 hover:border-white/20 hover:text-white"
                   }`}
                 >
                   {cat}

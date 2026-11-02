@@ -84,10 +84,12 @@ export default function Navbar() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Brand */}
           <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-xl text-white">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white">
+            <span className="brand-mark h-9 w-9">
               <Wallet className="h-5 w-5" aria-hidden="true" />
             </span>
-            <span className="whitespace-nowrap text-base font-semibold tracking-tight">Expense Tracker</span>
+            <span className="whitespace-nowrap text-base font-bold tracking-tight">
+              Expense <span className="text-brand-300">Tracker</span>
+            </span>
           </Link>
 
           {/* Desktop navigation */}
@@ -102,8 +104,8 @@ export default function Navbar() {
                   aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-[40px] items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-colors duration-150 ${
                     isActive
-                      ? "bg-brand-500/15 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "bg-brand-400/10 text-brand-200 ring-1 ring-inset ring-brand-400/20"
+                      : "text-stone-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <Icon
@@ -125,9 +127,9 @@ export default function Navbar() {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Account menu"
-              className="flex min-h-[44px] items-center gap-2 rounded-xl px-1.5 text-slate-300 transition-colors duration-150 hover:bg-white/5 hover:text-white sm:px-2"
+              className="flex min-h-[44px] items-center gap-2 rounded-xl px-1.5 text-stone-300 transition-colors duration-150 hover:bg-white/5 hover:text-white sm:px-2"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-700 text-sm font-semibold text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-ink-700 to-ink-800 text-sm font-semibold text-brand-200 ring-1 ring-brand-400/30">
                 {initial}
               </span>
               {user && (
@@ -135,7 +137,7 @@ export default function Navbar() {
                   {user.name}
                 </span>
               )}
-              <ChevronDown className="hidden h-4 w-4 text-slate-500 sm:block" aria-hidden="true" />
+              <ChevronDown className="hidden h-4 w-4 text-stone-500 sm:block" aria-hidden="true" />
             </button>
 
             {menuOpen && (
@@ -146,7 +148,7 @@ export default function Navbar() {
                 {user && (
                   <div className="px-3 py-2.5">
                     <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-                    {user.email && <p className="truncate text-xs text-slate-400">{user.email}</p>}
+                    {user.email && <p className="truncate text-xs text-stone-400">{user.email}</p>}
                   </div>
                 )}
                 {user && <div className="divider my-1" />}
@@ -155,10 +157,10 @@ export default function Navbar() {
                   role="menuitem"
                   onClick={triggerHardRefresh}
                   disabled={refreshing}
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-slate-200 transition-colors duration-150 hover:bg-white/5 disabled:opacity-60"
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-stone-200 transition-colors duration-150 hover:bg-white/5 disabled:opacity-60"
                 >
                   <RefreshCw
-                    className={`h-4 w-4 text-slate-400 ${refreshing ? "animate-spin" : ""}`}
+                    className={`h-4 w-4 text-stone-400 ${refreshing ? "animate-spin" : ""}`}
                     aria-hidden="true"
                   />
                   {refreshing ? "Refreshing…" : "Refresh app"}
@@ -193,12 +195,12 @@ export default function Navbar() {
                   to={item.path}
                   aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-[56px] flex-col items-center justify-center gap-1 text-xs font-medium transition-colors duration-150 ${
-                    isActive ? "text-brand-300" : "text-slate-400 hover:text-white"
+                    isActive ? "text-brand-300" : "text-stone-400 hover:text-white"
                   }`}
                 >
                   <span
                     className={`flex h-7 w-12 items-center justify-center rounded-full ${
-                      isActive ? "bg-brand-500/15" : ""
+                      isActive ? "bg-brand-400/15" : ""
                     }`}
                   >
                     <Icon className="h-5 w-5" aria-hidden="true" />

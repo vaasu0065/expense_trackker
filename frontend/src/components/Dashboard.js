@@ -16,8 +16,8 @@ function formatCurrency(n) {
 
 function budgetTone(pct) {
   if (pct >= 100) return { bar: "bg-expense-500", text: "text-expense-400" };
-  if (pct >= 80) return { bar: "bg-amber-400", text: "text-amber-400" };
-  return { bar: "bg-brand-500", text: "text-slate-400" };
+  if (pct >= 80) return { bar: "bg-orange-400", text: "text-orange-400" };
+  return { bar: "bg-brand-500", text: "text-stone-400" };
 }
 
 export default function Dashboard() {
@@ -106,10 +106,11 @@ export default function Dashboard() {
         {/* Page header */}
         <header className="page-header">
           <div>
-            <h1 className="page-title">Dashboard</h1>
-            <p className="page-subtitle">
-              {monthName} {currentYear} overview
+            <p className="eyebrow">
+              {monthName} {currentYear}
             </p>
+            <h1 className="page-title mt-1">Dashboard</h1>
+            <p className="page-subtitle">Your money at a glance</p>
           </div>
           <button
             type="button"
@@ -125,9 +126,9 @@ export default function Dashboard() {
         {/* KPI row */}
         <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {/* Spent this month */}
-          <div className="kpi">
+          <div className="card-gold p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
-              <p className="kpi-label">Spent in {monthName}</p>
+              <p className="kpi-label text-brand-300">Spent in {monthName}</p>
               <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-expense-500/10 text-expense-400">
                 <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
               </span>
@@ -184,7 +185,7 @@ export default function Dashboard() {
               </>
             ) : (
               <>
-                <p className="kpi-value text-slate-500">Not set</p>
+                <p className="kpi-value text-stone-500">Not set</p>
                 <p className="kpi-hint">Set a monthly budget below</p>
               </>
             )}
@@ -194,7 +195,7 @@ export default function Dashboard() {
           <div className="kpi">
             <div className="flex items-start justify-between gap-3">
               <p className="kpi-label">All-time spent</p>
-              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-white/[0.06] text-slate-300">
+              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-white/[0.06] text-stone-300">
                 <Wallet className="h-4 w-4" aria-hidden="true" />
               </span>
             </div>

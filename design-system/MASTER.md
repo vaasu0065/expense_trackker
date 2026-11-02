@@ -4,40 +4,43 @@ Source of truth for the web app (`frontend/`) and the Flutter app (`mobile_app/`
 Generated with the ui-ux-pro-max skill (fintech dashboard → Dark Mode (OLED), IBM Plex Sans).
 
 ## Principles
-1. **Colour carries meaning.** Emerald = money in. Rose = money out. Amber = warning/overdue.
-   Indigo = actions, focus, active navigation. Never use green/red decoratively.
-2. **One dark surface system.** No white or light-grey panels anywhere in dark UI.
-3. **Numbers are the content.** Amounts use tabular figures, semibold, and are the largest
+1. **Colour carries meaning.** Green = money in. Coral = money out. Orange = warning/overdue.
+   Champagne gold = actions, focus, active navigation, brand. Never use green/red decoratively.
+2. **One warm-dark surface system.** No white or light-grey panels anywhere in dark UI.
+3. **Numbers are the content.** Amounts use tabular figures, bold, and are the largest
    text in their card. Labels are small, muted, and secondary.
-4. **Quiet chrome.** Flat surfaces with a hairline border. No gradient text, glow, blur blobs,
-   scale-on-hover or pulsing (pulsing only for a genuine alert, if at all).
+4. **Quiet luxury.** Hairline borders, a faint top sheen on cards, gold used sparingly.
+   One `card-gold` highlight per screen at most. No gradient text, scale-on-hover or pulsing.
 5. **Accessible by default.** Text contrast ≥ 4.5:1, visible focus rings, 44px touch targets,
    labels on every input, aria-labels on icon-only buttons, respect reduced motion.
 
-## Tokens
+## Tokens (web)
 | Token | Hex | Use |
 |---|---|---|
-| ink-950 | `#020617` | Page background |
-| ink-900 | `#0B1222` | Cards |
-| ink-850 | `#101A2E` | Inputs, raised areas inside cards |
-| ink-800 | `#16223A` | Hover |
-| ink-700 | `#22304D` | Strong borders, active segment |
-| border | `white @ 8%` | Card and divider hairlines |
-| text | `#F8FAFC` / slate-100 | Primary text |
-| text-muted | slate-400 `#94A3B8` | Secondary text (min. for body copy) |
-| text-faint | slate-500 `#64748B` | Placeholders, hints only |
-| brand-500 | `#6366F1` | Primary buttons, active nav, focus (brand-400 `#818CF8` for rings/text) |
-| income-400 | `#34D399` | Money in (text); income-500 `#10B981` fills |
-| expense-400 | `#FB7185` | Money out (text); expense-500 `#F43F5E` fills |
-| amber-400 | `#FBBF24` | Warnings, overdue |
+| ink-950 | `#0B0B0D` | Page background |
+| ink-900 | `#131316` | Cards |
+| ink-850 | `#1A1A1E` | Inputs, raised areas inside cards |
+| ink-800 | `#222227` | Hover |
+| ink-700 | `#2E2E34` | Strong borders, active segment |
+| border | `white @ 7%` | Card and divider hairlines |
+| text | stone-100 `#F5F5F4` | Primary text |
+| text-muted | stone-400 `#A8A29E` | Secondary text (min. for body copy) |
+| text-faint | stone-500 `#78716C` | Placeholders, hints only |
+| brand-400 | `#D6B36A` | Gold: links, icons, focus. Buttons are a brand-300 → brand-500 gradient with **ink-950 text** |
+| income-400 | `#4ADE80` | Money in (text); income-500 `#22C55E` fills |
+| expense-400 | `#F87171` | Money out (text); expense-500 `#EF4444` fills |
+| orange-400 | `#FB923C` | Warnings, overdue (amber is too close to gold) |
 
-Chart categorical palette (dark-safe, in order): `#818CF8 #34D399 #FBBF24 #FB7185 #38BDF8 #C084FC #F472B6 #A3E635`.
+Chart categorical palette (dark-safe, in order): `#D6B36A #60A5FA #34D399 #F472B6 #A78BFA #FB923C #2DD4BF #E7E5E4`.
+
+The Flutter app (`mobile_app/`) still uses the previous indigo palette.
 
 ## Typography
-- Family: **IBM Plex Sans** (400/500/600/700); IBM Plex Mono only for raw SMS text.
-- Page title 24–30px/600, card title 16–18px/600, body 14–15px/400, label 12–14px/500.
-- Amounts: `tabular-nums`, 600. KPI value 24–28px.
-- Uppercase only for tiny eyebrow labels (tracking-wider). Never for headings or buttons.
+- UI: **Manrope** (400–800). Page and auth titles: **Instrument Serif** (`font-display`).
+  **JetBrains Mono** only for raw SMS text, keys and account numbers.
+- Page title 32–40px serif, card title 16–18px/700, body 14–15px/400, label 12–14px/500.
+- Amounts: `tabular-nums`, 700. KPI value 24–30px.
+- Uppercase only for tiny eyebrow labels (`eyebrow`, `kpi-label`). Never for headings or buttons.
 
 ## Shape & spacing
 - Radius: cards 16px, inputs/buttons 12px, badges full.
@@ -46,7 +49,7 @@ Chart categorical palette (dark-safe, in order): `#818CF8 #34D399 #FBBF24 #FB718
 
 ## Web implementation (`frontend/src/index.css`)
 Compose these classes instead of hand-rolling colours:
-`page page-header page-title page-subtitle card card-pad card-header card-title card-subtitle divider
+`page page-header page-title page-subtitle eyebrow card card-gold brand-mark card-pad card-header card-title card-subtitle divider
 kpi kpi-label kpi-value kpi-hint icon-tile amount amount-in amount-out label input select field-hint
 field-error btn btn-primary btn-secondary btn-ghost btn-success btn-danger btn-sm btn-icon badge
 badge-neutral badge-brand badge-income badge-expense badge-warning segmented segmented-item

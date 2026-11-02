@@ -203,7 +203,7 @@ export default function LendBorrow() {
               <div className="kpi">
                 <div className="flex items-center justify-between gap-2">
                   <span className="kpi-label">Net balance</span>
-                  <Scale className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <Scale className="h-4 w-4 text-stone-400" aria-hidden="true" />
                 </div>
                 <p className={`kpi-value ${netBalance > 0 ? "text-income-400" : netBalance < 0 ? "text-expense-400" : ""}`}>
                   {netBalance > 0 ? "+" : netBalance < 0 ? "−" : ""}
@@ -216,11 +216,11 @@ export default function LendBorrow() {
                 <div className="flex items-center justify-between gap-2">
                   <span className="kpi-label">Overdue</span>
                   <AlertTriangle
-                    className={`h-4 w-4 ${overdueCount > 0 ? "text-amber-400" : "text-slate-500"}`}
+                    className={`h-4 w-4 ${overdueCount > 0 ? "text-orange-400" : "text-stone-500"}`}
                     aria-hidden="true"
                   />
                 </div>
-                <p className={`kpi-value ${overdueCount > 0 ? "text-amber-400" : ""}`}>{overdueCount}</p>
+                <p className={`kpi-value ${overdueCount > 0 ? "text-orange-400" : ""}`}>{overdueCount}</p>
                 <p className="kpi-hint">{overdueCount === 1 ? "Entry past due date" : "Entries past due date"}</p>
               </div>
             </>
@@ -265,10 +265,10 @@ export default function LendBorrow() {
             </ul>
           ) : entries.length === 0 ? (
             <div className="empty-state">
-              <div className="icon-tile mb-2 bg-white/[0.06] text-slate-400">
+              <div className="icon-tile mb-2 bg-white/[0.06] text-stone-400">
                 <Users className="h-5 w-5" aria-hidden="true" />
               </div>
-              <p className="text-base font-medium text-slate-200">No entries here yet</p>
+              <p className="text-base font-medium text-stone-200">No entries here yet</p>
               <p className="max-w-sm">
                 {filterType || filterStatus
                   ? "Nothing matches these filters. Try another filter or add a new entry."
@@ -293,7 +293,7 @@ export default function LendBorrow() {
                     <div
                       className={`icon-tile ${
                         settled
-                          ? "bg-white/[0.06] text-slate-400"
+                          ? "bg-white/[0.06] text-stone-400"
                           : lend
                           ? "bg-income-500/15 text-income-400"
                           : "bg-expense-500/15 text-expense-400"
@@ -320,32 +320,32 @@ export default function LendBorrow() {
                               </span>
                             )}
                           </div>
-                          {e.note && <p className="mt-1 break-words text-sm text-slate-400">{e.note}</p>}
+                          {e.note && <p className="mt-1 break-words text-sm text-stone-400">{e.note}</p>}
                         </div>
 
                         <div className="shrink-0 text-right">
                           <p
                             className={`amount text-base sm:text-lg ${
-                              settled ? "text-slate-400 line-through decoration-slate-600" : lend ? "text-income-400" : "text-expense-400"
+                              settled ? "text-stone-400 line-through decoration-stone-600" : lend ? "text-income-400" : "text-expense-400"
                             }`}
                           >
                             {formatCurrency(e.amount)}
                           </p>
-                          <p className="mt-0.5 text-xs text-slate-400">
+                          <p className="mt-0.5 text-xs text-stone-400">
                             {settled ? "Settled" : lend ? "Owes you" : "You owe"}
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-400">
                           <span className="inline-flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                             {formatDate(e.date)}
                           </span>
                           {e.due_date && (
                             <span
-                              className={`inline-flex items-center gap-1.5 ${overdue ? "font-medium text-amber-400" : ""}`}
+                              className={`inline-flex items-center gap-1.5 ${overdue ? "font-medium text-orange-400" : ""}`}
                             >
                               {overdue ? (
                                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
@@ -476,14 +476,14 @@ export default function LendBorrow() {
 
               <div>
                 <label htmlFor="lb-due" className="label">
-                  Due date <span className="font-normal text-slate-500">(optional)</span>
+                  Due date <span className="font-normal text-stone-500">(optional)</span>
                 </label>
                 <input id="lb-due" type="date" value={form.due_date} onChange={set("due_date")} className="input" />
               </div>
 
               <div className="sm:col-span-2">
                 <label htmlFor="lb-note" className="label">
-                  Note <span className="font-normal text-slate-500">(optional)</span>
+                  Note <span className="font-normal text-stone-500">(optional)</span>
                 </label>
                 <input
                   id="lb-note"

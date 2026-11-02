@@ -81,8 +81,8 @@ export default function ForgotPassword() {
   };
 
   const strength = newPassword.length < 4 ? "Weak" : newPassword.length < 8 ? "Fair" : "Strong";
-  const strengthColor = { Weak: "bg-expense-500", Fair: "bg-amber-400", Strong: "bg-income-500" }[strength];
-  const strengthText = { Weak: "text-expense-400", Fair: "text-amber-400", Strong: "text-income-400" }[strength];
+  const strengthColor = { Weak: "bg-expense-500", Fair: "bg-orange-400", Strong: "bg-income-500" }[strength];
+  const strengthText = { Weak: "text-expense-400", Fair: "text-orange-400", Strong: "text-income-400" }[strength];
   const mismatch = confirmPassword && confirmPassword !== newPassword;
   const matches = confirmPassword && confirmPassword === newPassword;
 
@@ -95,34 +95,34 @@ export default function ForgotPassword() {
       <main className="flex min-h-screen items-center justify-center px-4 py-10 animate-fade-in">
         <div className="w-full max-w-md">
           <div className="mb-6 flex items-center justify-center gap-2.5 text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500">
+            <span className="brand-mark h-10 w-10">
               <Wallet className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="text-lg font-semibold tracking-tight">Expense Tracker</span>
           </div>
 
-          <div className="card p-6 sm:p-8">
+          <div className="card-gold p-6 sm:p-8">
             {/* Header */}
             <div className="mb-6">
-              <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-400">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-stone-400">
                 <KeyRound className="h-3.5 w-3.5 text-brand-400" aria-hidden="true" />
                 Step {step} of 2
               </p>
-              <h1 className="text-2xl font-semibold tracking-tight text-white">
+              <h1 className="font-display text-[2rem] leading-tight text-white">
                 {step === 1 ? "Reset your password" : "Enter your code"}
               </h1>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-stone-400">
                 {step === 1 ? (
                   "Enter your account email and we'll send you a 6-digit reset code."
                 ) : (
                   <>
-                    We sent a 6-digit code to <span className="font-medium text-slate-200">{email}</span>.
+                    We sent a 6-digit code to <span className="font-medium text-stone-200">{email}</span>.
                   </>
                 )}
               </p>
               <div className="mt-4 flex gap-2" aria-hidden="true">
-                <div className="h-1 flex-1 rounded-full bg-brand-500" />
-                <div className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-brand-500" : "bg-white/10"}`} />
+                <div className="h-1 flex-1 rounded-full bg-brand-400" />
+                <div className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-brand-400" : "bg-white/10"}`} />
               </div>
             </div>
 
@@ -289,7 +289,7 @@ export default function ForgotPassword() {
             )}
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-400">
+          <p className="mt-6 text-center text-sm text-stone-400">
             Remembered it?{" "}
             <a href="/login" className="font-medium text-brand-400 hover:text-brand-300 hover:underline">
               Back to sign in

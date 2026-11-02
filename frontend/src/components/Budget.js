@@ -15,7 +15,7 @@ function formatCurrency(n) {
 function Stat({ label, value, className = "" }) {
   return (
     <div className="rounded-xl bg-ink-850 px-3.5 py-3">
-      <dt className="text-xs text-slate-400">{label}</dt>
+      <dt className="text-xs text-stone-400">{label}</dt>
       <dd className={`mt-1 text-base font-semibold tabular-nums ${className || "text-white"}`}>{value}</dd>
     </div>
   );
@@ -86,7 +86,7 @@ export default function Budget({ onSaved }) {
     pct >= 100
       ? { bar: "bg-expense-500", text: "text-expense-400", Icon: AlertTriangle, label: "Budget exceeded" }
       : pct >= 80
-      ? { bar: "bg-amber-400", text: "text-amber-400", Icon: AlertTriangle, label: "Nearing limit" }
+      ? { bar: "bg-orange-400", text: "text-orange-400", Icon: AlertTriangle, label: "Nearing limit" }
       : { bar: "bg-brand-500", text: "text-income-400", Icon: CheckCircle2, label: "On track" };
 
   return (
@@ -184,8 +184,8 @@ export default function Budget({ onSaved }) {
         ) : (
           !editing && (
             <div className="empty-state py-8">
-              <Target className="h-8 w-8 text-slate-500" aria-hidden="true" />
-              <p className="font-medium text-slate-200">No budget set for {monthName}</p>
+              <Target className="h-8 w-8 text-stone-500" aria-hidden="true" />
+              <p className="font-medium text-stone-200">No budget set for {monthName}</p>
               <p>Set your income and a spending cap to track progress.</p>
               <button type="button" onClick={() => setEditing(true)} className="btn-primary mt-2">
                 Set budget

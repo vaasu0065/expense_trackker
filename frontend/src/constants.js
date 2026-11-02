@@ -12,6 +12,6 @@ export const EXPENSE_CATEGORIES = [
 
 // Categorical chart palette from design-system/MASTER.md (legible on the dark surfaces)
 export const CHART_COLORS = [
-  "#818CF8", "#34D399", "#FBBF24", "#FB7185", "#38BDF8",
-  "#C084FC", "#F472B6", "#A3E635",
+  "#D6B36A", "#60A5FA", "#34D399", "#F472B6", "#A78BFA",
+  "#FB923C", "#2DD4BF", "#E7E5E4",
 ];

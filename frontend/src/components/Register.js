@@ -62,16 +62,16 @@ export default function Register() {
       <main className="flex min-h-screen items-center justify-center px-4 py-10 animate-fade-in">
         <div className="w-full max-w-md">
           <div className="mb-6 flex items-center justify-center gap-2.5 text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500">
+            <span className="brand-mark h-10 w-10">
               <Wallet className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="text-lg font-semibold tracking-tight">Expense Tracker</span>
           </div>
 
-          <div className="card p-6 sm:p-8">
+          <div className="card-gold p-6 sm:p-8">
             <div className="mb-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-white">Create your account</h1>
-              <p className="mt-1 text-sm text-slate-400">Start tracking where your money goes.</p>
+              <h1 className="font-display text-[2rem] leading-tight text-white">Create your account</h1>
+              <p className="mt-1 text-sm text-stone-400">Start tracking where your money goes.</p>
             </div>
 
             <div className="space-y-4">
@@ -152,7 +152,7 @@ export default function Register() {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-400">
+          <p className="mt-6 text-center text-sm text-stone-400">
             Already have an account?{" "}
             <a href="/login" className="font-medium text-brand-400 hover:text-brand-300 hover:underline">
               Sign in

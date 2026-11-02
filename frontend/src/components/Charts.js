@@ -39,7 +39,7 @@ export default function Charts() {
     ? data.reduce((a, b) => (parseFloat(a.total) > parseFloat(b.total) ? a : b))
     : null;
 
-  const FONT = "'IBM Plex Sans', system-ui, sans-serif";
+  const FONT = "'Manrope', system-ui, sans-serif";
 
   const barData = {
     labels: data.map((d) => formatShortDate(d.date)),
@@ -48,10 +48,10 @@ export default function Charts() {
         label: "Daily Spend (₹)",
         data: data.map((d) => parseFloat(d.total) || 0),
         backgroundColor: data.map((d) =>
-          maxDay && d.date === maxDay.date ? "#FB7185" : "#6366F1"
+          maxDay && d.date === maxDay.date ? "#F87171" : "#C49A4A"
         ),
         hoverBackgroundColor: data.map((d) =>
-          maxDay && d.date === maxDay.date ? "#FDA4AF" : "#818CF8"
+          maxDay && d.date === maxDay.date ? "#FCA5A5" : "#E9CF95"
         ),
         borderRadius: 6,
         borderSkipped: false,
@@ -66,11 +66,11 @@ export default function Charts() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#101A2E",
+        backgroundColor: "#1A1A1E",
         borderColor: "rgba(255,255,255,0.1)",
         borderWidth: 1,
-        titleColor: "#94A3B8",
-        bodyColor: "#F8FAFC",
+        titleColor: "#A8A29E",
+        bodyColor: "#FAFAF9",
         titleFont: { family: FONT, size: 12, weight: "500" },
         bodyFont: { family: FONT, size: 13, weight: "600" },
         padding: 10,
@@ -85,7 +85,7 @@ export default function Charts() {
       x: {
         grid: { display: false },
         border: { color: "rgba(255,255,255,0.08)" },
-        ticks: { font: { family: FONT, size: 12 }, color: "#94A3B8", maxRotation: 0, autoSkipPadding: 8 },
+        ticks: { font: { family: FONT, size: 12 }, color: "#A8A29E", maxRotation: 0, autoSkipPadding: 8 },
       },
       y: {
         grid: { color: "rgba(255,255,255,0.06)" },
@@ -93,7 +93,7 @@ export default function Charts() {
         ticks: {
           callback: (v) => `₹${v.toLocaleString("en-IN")}`,
           font: { family: FONT, size: 12 },
-          color: "#94A3B8",
+          color: "#A8A29E",
           maxTicksLimit: 6,
         },
       },
@@ -133,20 +133,20 @@ export default function Charts() {
       {!loading && data.length > 0 && (
         <dl className="mb-5 grid grid-cols-3 gap-3">
           <div className="rounded-xl bg-ink-850 px-3 py-2.5">
-            <dt className="text-xs text-slate-400">Total</dt>
+            <dt className="text-xs text-stone-400">Total</dt>
             <dd className="mt-0.5 text-sm font-semibold tabular-nums text-white sm:text-base">
               ₹{totalSpent.toLocaleString("en-IN")}
             </dd>
           </div>
           <div className="rounded-xl bg-ink-850 px-3 py-2.5">
-            <dt className="text-xs text-slate-400">Avg / day</dt>
+            <dt className="text-xs text-stone-400">Avg / day</dt>
             <dd className="mt-0.5 text-sm font-semibold tabular-nums text-white sm:text-base">
               ₹{Number(avgPerDay).toLocaleString("en-IN")}
             </dd>
           </div>
           {maxDay && (
             <div className="rounded-xl bg-ink-850 px-3 py-2.5">
-              <dt className="text-xs text-slate-400">Highest</dt>
+              <dt className="text-xs text-stone-400">Highest</dt>
               <dd className="mt-0.5 text-sm font-semibold tabular-nums text-expense-400 sm:text-base">
                 ₹{parseFloat(maxDay.total).toLocaleString("en-IN")}
               </dd>
@@ -164,8 +164,8 @@ export default function Charts() {
         </div>
       ) : data.length === 0 ? (
         <div className="empty-state h-64 rounded-xl border border-dashed border-white/10">
-          <BarChart3 className="h-8 w-8 text-slate-500" aria-hidden="true" />
-          <p className="font-medium text-slate-200">No spending this month</p>
+          <BarChart3 className="h-8 w-8 text-stone-500" aria-hidden="true" />
+          <p className="font-medium text-stone-200">No spending this month</p>
           <p>Log some expenses to see your daily totals.</p>
         </div>
       ) : (
@@ -182,9 +182,9 @@ export default function Charts() {
       )}
 
       {!loading && maxDay && (
-        <p className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+        <p className="mt-4 flex items-center gap-2 text-xs text-stone-400">
           <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm bg-expense-400" aria-hidden="true" />
-          Highest day: <span className="font-medium text-slate-200">{formatShortDate(maxDay.date)}</span>
+          Highest day: <span className="font-medium text-stone-200">{formatShortDate(maxDay.date)}</span>
           <span className="tabular-nums">(₹{parseFloat(maxDay.total).toLocaleString("en-IN")})</span>
         </p>
       )}
