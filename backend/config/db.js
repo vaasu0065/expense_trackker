@@ -11,6 +11,11 @@ const poolConfig = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  // Each Vercel function instance gets its own pool, so keep it small and let
+  // idle connections go; otherwise a few warm instances exhaust Supabase's
+  // pooler. Use the transaction pooler (port 6543) in production.
+  max: parseInt(process.env.DB_POOL_MAX || (process.env.VERCEL ? "2" : "10"), 10),
+  idleTimeoutMillis: process.env.VERCEL ? 5000 : 30000,
 };
 
 if (!global.__pgPool) {
