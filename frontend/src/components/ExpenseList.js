@@ -2,19 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
-import { 
-  Filter, 
-  ArrowUpDown, 
-  Download, 
-  FileSpreadsheet, 
-  Pencil, 
-  Trash2, 
-  Receipt, 
-  Calendar, 
-  Clock, 
-  X,
-  Check
-} from "lucide-react";
+import { Download, FileSpreadsheet, Pencil, Trash2, Receipt, X, Check } from "lucide-react";
+import { parseDate } from "../utils/date";
 
 function formatCurrency(n) {
   return `₹${(parseFloat(n) || 0).toLocaleString("en-IN")}`;
@@ -22,10 +11,10 @@ function formatCurrency(n) {
 
 function formatDate(d) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return parseDate(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default function ExpenseList({ filters, setFilters, selectedDate, refreshKey }) {
+export default function ExpenseList({ filters, setFilters, selectedDate, setSelectedDate, refreshKey }) {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +33,10 @@ export default function ExpenseList({ filters, setFilters, selectedDate, refresh
     setLoading(true);
     try {
       const params = {};
-      if (filters.month) params.month = filters.month;
+      if (filters.month) {
+        params.month = filters.month;
+        params.year = new Date().getFullYear();
+      }
       if (filters.category) params.category = filters.category;
       if (filters.sort) params.sort = filters.sort;
       if (selectedDate) params.date = selectedDate;
@@ -128,234 +120,354 @@ export default function ExpenseList({ filters, setFilters, selectedDate, refresh
     } catch { showToast("Export failed", "error"); }
   };
 
+  const thisYear = new Date().getFullYear();
+  const shortDate = (d) => {
+    if (!d) return "—";
+    const dt = parseDate(d);
+    return dt.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      ...(dt.getFullYear() !== thisYear ? { year: "numeric" } : {}),
+    });
+  };
+
+  const closeEdit = () => {
+    if (!saving) setEditModal(null);
+  };
+
+  const renderActions = (e) => (
+    <div className="flex items-center justify-end gap-1">
+      <button
+        type="button"
+        onClick={() => openEdit(e)}
+        className="btn-icon h-9 w-9 hover:text-brand-300"
+        aria-label={`Edit ${e.title}`}
+        title="Edit"
+      >
+        <Pencil className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => del(e.id)}
+        className="btn-icon h-9 w-9 hover:bg-expense-500/10 hover:text-expense-400"
+        aria-label={`Delete ${e.title}`}
+        title="Delete"
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
 
-      {/* Filters Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-[#131C31]/80 p-3.5 rounded-2xl border border-white/10 shadow-lg">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative">
-            <select
-              value={filters.month || ""}
-              onChange={(e) => setFilters((p) => ({ ...p, month: e.target.value || undefined }))}
-              className="pl-8 pr-3 py-2 border border-white/20 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 bg-[#1A253D] text-white outline-none shadow-sm transition-all"
-            >
-              <option value="" className="bg-[#0F172A] text-white">All Months</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i} value={i + 1} className="bg-[#0F172A] text-white">
-                  {new Date(0, i).toLocaleString("en", { month: "short" })}
-                </option>
-              ))}
-            </select>
-            <Filter className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      <section className="card overflow-hidden" aria-labelledby="ledger-title">
+        <div className="card-pad pb-4 sm:pb-5">
+          <div className="card-header mb-4 flex-wrap gap-y-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="icon-tile hidden bg-brand-500/10 text-brand-400 sm:flex">
+                <Receipt className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h2 id="ledger-title" className="card-title">Ledger &amp; history</h2>
+                <p className="card-subtitle">
+                  {loading
+                    ? "Loading transactions…"
+                    : `${expenses.length} ${expenses.length === 1 ? "transaction" : "transactions"}${
+                        selectedDate ? ` on ${formatDate(selectedDate)}` : ""
+                      }`}
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button type="button" onClick={downloadCSV} className="btn-secondary btn-sm" title="Download CSV">
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                CSV
+              </button>
+              <button type="button" onClick={downloadExcel} className="btn-secondary btn-sm" title="Download Excel spreadsheet">
+                <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden="true" />
+                Excel
+              </button>
+            </div>
           </div>
 
-          <select
-            value={filters.category || ""}
-            onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value || undefined }))}
-            className="px-3 py-2 border border-white/20 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 bg-[#1A253D] text-white outline-none shadow-sm transition-all"
-          >
-            <option value="" className="bg-[#0F172A] text-white">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat} className="bg-[#0F172A] text-white">{cat}</option>
-            ))}
-          </select>
+          {/* Filters toolbar */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))]">
+            <div className="col-span-2 md:col-span-1">
+              <label htmlFor="ledger-date" className="mb-1 block text-xs font-medium text-slate-400">
+                Date
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="ledger-date"
+                  type="date"
+                  className="input min-h-[40px] py-2 text-sm tabular-nums"
+                  value={selectedDate || ""}
+                  onChange={(e) => setSelectedDate && setSelectedDate(e.target.value)}
+                />
+                {selectedDate && setSelectedDate && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate("")}
+                    className="btn-secondary min-h-[40px] shrink-0 px-3 py-2 text-xs"
+                  >
+                    All dates
+                  </button>
+                )}
+              </div>
+            </div>
 
-          <div className="relative">
-            <select
-              value={filters.sort || ""}
-              onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value || undefined }))}
-              className="pl-8 pr-3 py-2 border border-white/20 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 bg-[#1A253D] text-white outline-none shadow-sm transition-all"
-            >
-              <option value="" className="bg-[#0F172A] text-white">Sort: Newest</option>
-              <option value="newest" className="bg-[#0F172A] text-white">Newest first</option>
-              <option value="oldest" className="bg-[#0F172A] text-white">Oldest first</option>
-              <option value="high" className="bg-[#0F172A] text-white">Highest amount</option>
-              <option value="low" className="bg-[#0F172A] text-white">Lowest amount</option>
-            </select>
-            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={downloadCSV}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-[#1A253D] hover:bg-white/10 border border-white/20 rounded-xl transition-all shadow-sm active:scale-95"
-            title="Download CSV"
-          >
-            <Download className="w-3.5 h-3.5 text-indigo-400" />
-            <span>CSV</span>
-          </button>
-          <button
-            onClick={downloadExcel}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/30 active:scale-95"
-            title="Download Excel Spreadsheet"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>Export Excel</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Table Section */}
-      {loading ? (
-        <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm font-semibold">Updating ledger…</span>
-        </div>
-      ) : expenses.length === 0 ? (
-        <div className="py-16 text-center bg-[#131C31]/60 rounded-2xl border border-dashed border-white/20">
-          <div className="w-12 h-12 rounded-2xl bg-[#1A253D] flex items-center justify-center text-indigo-400 mx-auto mb-3">
-            <Receipt className="w-6 h-6" />
-          </div>
-          <p className="text-white font-bold mb-1">No transactions recorded</p>
-          <p className="text-xs text-slate-400">Add an entry above or reset date filters to explore logs</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto -mx-2">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 bg-[#131C31]/80">
-                {["Title", "Amount", "Category", "Date", "Time", "Actions"].map((h) => (
-                  <th key={h} className={`px-4 py-3 text-[11px] font-extrabold text-slate-300 uppercase tracking-wider ${h === "Actions" ? "text-right" : ""}`}>
-                    {h}
-                  </th>
+            <div className="col-span-2 md:col-span-1">
+              <label htmlFor="ledger-category" className="mb-1 block text-xs font-medium text-slate-400">
+                Category
+              </label>
+              <select
+                id="ledger-category"
+                value={filters.category || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value || undefined }))}
+                className="select min-h-[40px] py-2 text-sm"
+              >
+                <option value="">All categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {expenses.map((e) => (
-                <tr key={e.id} className="group hover:bg-white/5 hover:scale-[1.004] transition-all duration-200">
-                  <td className="px-4 py-3.5 font-bold text-white text-sm group-hover:text-indigo-300 transition-colors">
-                    {e.title}
-                  </td>
-                  <td className="px-4 py-3.5 font-extrabold text-emerald-400 text-sm">
-                    {formatCurrency(e.amount)}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg text-xs font-bold border border-indigo-500/30 group-hover:bg-indigo-500/30 transition-colors">
-                      {e.category || "General"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-xs font-semibold text-slate-300">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                      {formatDate(e.date)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-xs font-medium text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-purple-400" />
-                      {e.time || "—"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right space-x-1.5">
-                    <button
-                      onClick={() => openEdit(e)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-indigo-400 hover:bg-indigo-500/20 rounded-xl transition-all active:scale-95"
-                      title="Edit Transaction"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => del(e.id)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all active:scale-95"
-                      title="Delete Transaction"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Del</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </select>
+            </div>
 
-      {/* Glassmorphic Edit Modal */}
+            <div>
+              <label htmlFor="ledger-month" className="mb-1 block text-xs font-medium text-slate-400">
+                Month
+              </label>
+              <select
+                id="ledger-month"
+                value={filters.month || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, month: e.target.value || undefined }))}
+                className="select min-h-[40px] py-2 text-sm"
+              >
+                <option value="">All months</option>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i} value={i + 1}>
+                    {new Date(0, i).toLocaleString("en", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="ledger-sort" className="mb-1 block text-xs font-medium text-slate-400">
+                Sort by
+              </label>
+              <select
+                id="ledger-sort"
+                value={filters.sort || ""}
+                onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value || undefined }))}
+                className="select min-h-[40px] py-2 text-sm"
+              >
+                <option value="">Default</option>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="high">Highest amount</option>
+                <option value="low">Lowest amount</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        {loading ? (
+          <ul className="divide-y divide-white/[0.05]" aria-busy="true" aria-label="Loading transactions">
+            {Array.from({ length: 5 }, (_, i) => (
+              <li key={i} className="flex items-center gap-4 px-5 py-4 sm:px-6">
+                <div className="skeleton h-4 w-14" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-4 w-2/5" />
+                  <div className="skeleton h-3 w-1/5" />
+                </div>
+                <div className="skeleton h-4 w-16" />
+              </li>
+            ))}
+          </ul>
+        ) : expenses.length === 0 ? (
+          <div className="empty-state">
+            <Receipt className="h-8 w-8 text-slate-500" aria-hidden="true" />
+            <p className="font-medium text-slate-200">No transactions found</p>
+            <p>
+              {selectedDate
+                ? "Nothing recorded on this date. Try another date or clear the filter."
+                : "Add an expense above or adjust the filters."}
+            </p>
+            {selectedDate && setSelectedDate && (
+              <button type="button" onClick={() => setSelectedDate("")} className="btn-secondary btn-sm mt-2">
+                Show all dates
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <table className="table table-fixed">
+                <colgroup>
+                  <col className="w-[120px]" />
+                  <col />
+                  <col className="w-[180px]" />
+                  <col className="w-[140px]" />
+                  <col className="w-[108px]" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th scope="col" className="!pl-6">Date</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Category</th>
+                    <th scope="col" className="text-right">Amount</th>
+                    <th scope="col" className="!pr-6 text-right">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((e) => (
+                    <tr key={e.id}>
+                      <td className="!pl-6">
+                        <div className="whitespace-nowrap font-medium tabular-nums text-slate-100" title={formatDate(e.date)}>
+                          {shortDate(e.date)}
+                        </div>
+                        <div className="text-xs tabular-nums text-slate-500">{e.time || "—"}</div>
+                      </td>
+                      <td>
+                        <p className="truncate font-medium text-white" title={e.title}>{e.title}</p>
+                      </td>
+                      <td>
+                        <span className="badge-neutral max-w-full truncate">{e.category || "General"}</span>
+                      </td>
+                      <td className="text-right">
+                        <span className="amount-out whitespace-nowrap">−{formatCurrency(e.amount)}</span>
+                      </td>
+                      <td className="!py-2 !pr-4">
+                        {renderActions(e)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile list */}
+            <ul className="divide-y divide-white/[0.05] md:hidden">
+              {expenses.map((e) => (
+                <li key={e.id} className="flex items-start gap-3 px-5 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="truncate font-medium text-white">{e.title}</p>
+                      <span className="amount-out shrink-0 whitespace-nowrap">−{formatCurrency(e.amount)}</span>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                        <span className="badge-neutral max-w-[45vw] truncate">{e.category || "General"}</span>
+                        <span className="whitespace-nowrap tabular-nums">
+                          {shortDate(e.date)}
+                          {e.time ? ` · ${e.time}` : ""}
+                        </span>
+                      </div>
+                      <div className="-my-1.5 -mr-2 shrink-0">
+                        {renderActions(e)}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+
+      {/* Edit modal */}
       {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070B14]/80 backdrop-blur-md animate-fade-in" onClick={() => !saving && setEditModal(null)}>
-          <div className="glass-panel rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-scale-up border border-white/10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/10">
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Pencil className="w-5 h-5 text-indigo-400" /> Edit Transaction
-              </h3>
-              <button onClick={() => setEditModal(null)} className="p-1 rounded-lg text-slate-400 hover:bg-white/10 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="modal-backdrop" onClick={closeEdit} onKeyDown={(ev) => ev.key === "Escape" && closeEdit()}>
+          <div
+            className="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-expense-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h3 id="edit-expense-title" className="card-title">Edit transaction</h3>
+              <button type="button" onClick={closeEdit} className="btn-icon" aria-label="Close dialog">
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             <form onSubmit={saveEdit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Title</label>
+                <label htmlFor="edit-title" className="label">Title</label>
                 <input
+                  id="edit-title"
                   type="text"
+                  autoFocus
                   value={editModal.title}
                   onChange={(e) => setEditModal({ ...editModal, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-xl font-bold text-sm text-white placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                  className="input"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Amount (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={editModal.amount}
-                  onChange={(e) => setEditModal({ ...editModal, amount: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-xl font-extrabold text-sm text-emerald-400 placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Category</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Food, Travel…"
-                  value={editModal.category}
-                  onChange={(e) => setEditModal({ ...editModal, category: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-xl font-semibold text-sm text-white placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Date</label>
+                  <label htmlFor="edit-amount" className="label">Amount (₹)</label>
                   <input
-                    type="date"
-                    value={editModal.date}
-                    onChange={(e) => setEditModal({ ...editModal, date: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-[#1A253D] border border-white/20 rounded-xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                    id="edit-amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={editModal.amount}
+                    onChange={(e) => setEditModal({ ...editModal, amount: e.target.value })}
+                    className="input font-semibold tabular-nums"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Time</label>
+                  <label htmlFor="edit-category" className="label">Category</label>
                   <input
+                    id="edit-category"
+                    type="text"
+                    placeholder="e.g. Food, Travel"
+                    value={editModal.category}
+                    onChange={(e) => setEditModal({ ...editModal, category: e.target.value })}
+                    className="input"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit-date" className="label">Date</label>
+                  <input
+                    id="edit-date"
+                    type="date"
+                    value={editModal.date}
+                    onChange={(e) => setEditModal({ ...editModal, date: e.target.value })}
+                    className="input tabular-nums"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-time" className="label">Time</label>
+                  <input
+                    id="edit-time"
                     type="time"
                     value={editModal.time}
                     onChange={(e) => setEditModal({ ...editModal, time: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-[#1A253D] border border-white/20 rounded-xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+                    className="input tabular-nums"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>{saving ? "Updating…" : "Save Changes"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditModal(null)}
-                  disabled={saving}
-                  className="px-5 py-3 border border-white/20 rounded-xl font-bold text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-50 transition-colors"
-                >
+              <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={closeEdit} disabled={saving} className="btn-secondary">
                   Cancel
+                </button>
+                <button type="submit" disabled={saving} className="btn-primary">
+                  <Check className="h-4 w-4" aria-hidden="true" />
+                  {saving ? "Updating…" : "Save changes"}
                 </button>
               </div>
             </form>

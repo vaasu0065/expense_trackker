@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import api from "../api";
 import Navbar from "./Navbar";
 import ExpenseList from "./ExpenseList";
@@ -6,21 +6,18 @@ import AddExpense from "./AddExpense";
 import Charts from "./Charts";
 import Budget from "./Budget";
 import useAutoRefresh from "../hooks/useAutoRefresh";
-import { 
-  Wallet, 
-  ArrowUpRight, 
-  Receipt, 
-  CalendarRange, 
-  Target, 
-  RefreshCw, 
-  Sparkles,
-  PlusCircle,
-  TrendingDown
-} from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Target, Wallet, RefreshCw, Plus } from "lucide-react";
+import { todayLocal } from "../utils/date";
 
 function formatCurrency(n) {
   const num = parseFloat(n) || 0;
   return `₹${num.toLocaleString("en-IN")}`;
+}
+
+function budgetTone(pct) {
+  if (pct >= 100) return { bar: "bg-expense-500", text: "text-expense-400" };
+  if (pct >= 80) return { bar: "bg-amber-400", text: "text-amber-400" };
+  return { bar: "bg-brand-500", text: "text-slate-400" };
 }
 
 export default function Dashboard() {
@@ -29,7 +26,7 @@ export default function Dashboard() {
   const [monthlyCredit, setMonthlyCredit] = useState(0);
   const [budgetStatus, setBudgetStatus] = useState(null);
   const [filters, setFilters] = useState({ month: "", category: "", sort: "" });
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(todayLocal);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -47,7 +44,7 @@ export default function Dashboard() {
 
   const loadMonthlyTotal = useCallback(async () => {
     try {
-      const res = await api.get("/expenses/monthly", { params: { month: currentMonth } });
+      const res = await api.get("/expenses/monthly", { params: { month: currentMonth, year: currentYear } });
       const total = Array.isArray(res.data)
         ? res.data.reduce((sum, row) => sum + parseFloat(row.total || 0), 0)
         : 0;
@@ -55,7 +52,7 @@ export default function Dashboard() {
     } catch (err) {
       setMonthlyTotal(0);
     }
-  }, [currentMonth]);
+  }, [currentMonth, currentYear]);
 
   const loadBudgetStatus = useCallback(async () => {
     try {
@@ -79,16 +76,6 @@ export default function Dashboard() {
     }
   }, [currentMonth, currentYear]);
 
-  useEffect(() => {
-    loadSummary();
-  }, [loadSummary]);
-
-  useEffect(() => {
-    loadMonthlyTotal();
-    loadBudgetStatus();
-    loadMonthlyCredit();
-  }, [loadMonthlyTotal, loadBudgetStatus, loadMonthlyCredit]);
-
   const refreshAll = useCallback(() => {
     setIsRefreshing(true);
     loadSummary();
@@ -105,235 +92,154 @@ export default function Dashboard() {
     month: "long",
   });
 
+  const hasBudget = budgetStatus && (budgetStatus.budget > 0 || budgetStatus.spent > 0);
+  const budgetPct = hasBudget
+    ? Math.min(100, ((parseFloat(budgetStatus.spent) || 0) / (parseFloat(budgetStatus.budget) || 1)) * 100)
+    : 0;
+  const tone = budgetTone(budgetPct);
+
   return (
     <>
       <Navbar />
 
-      <div className="min-h-screen py-8 animate-fade-in">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Banner */}
-          <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 rounded-3xl text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-500/20 text-primary-300 border border-primary-500/30">
-                  <Sparkles className="w-3.5 h-3.5 animate-pulseGlow" /> Live Dashboard
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                Financial Overview
-              </h1>
-              <p className="mt-1 text-slate-300 text-sm sm:text-base">
-                Track every penny, optimize budgets, and achieve financial freedom.
-              </p>
-            </div>
+      <main className="page">
+        {/* Page header */}
+        <header className="page-header">
+          <div>
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-subtitle">
+              {monthName} {currentYear} overview
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={refreshAll}
+            disabled={isRefreshing}
+            className="btn-secondary self-start sm:self-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+            {isRefreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        </header>
 
-            <div className="relative z-10 flex items-center gap-3 self-start sm:self-center">
-              <button
-                onClick={refreshAll}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold text-sm backdrop-blur-md transition-all duration-300 active:scale-95 shadow-sm"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-primary-400" : ""}`} />
-                <span>Refresh Data</span>
-              </button>
+        {/* KPI row */}
+        <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {/* Spent this month */}
+          <div className="kpi">
+            <div className="flex items-start justify-between gap-3">
+              <p className="kpi-label">Spent in {monthName}</p>
+              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-expense-500/10 text-expense-400">
+                <ArrowDownRight className="h-4 w-4" aria-hidden="true" />
+              </span>
             </div>
-          </header>
-
-          {/* Stat Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-            {/* Total Expenses */}
-            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Total Expenses
-                  </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    {summary ? formatCurrency(summary.total) : "—"}
-                  </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-rose-400">
-                    <TrendingDown className="w-3.5 h-3.5" />
-                    <span>All-time spent</span>
-                  </div>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                  <Wallet className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-
-            {/* Credited */}
-            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Credited Income
-                  </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">
-                    {formatCurrency(monthlyCredit)}
-                  </p>
-                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-400">
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                    <span>In {monthName}</span>
-                  </div>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                  <ArrowUpRight className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Entries */}
-            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Total Entries
-                  </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-indigo-400 tracking-tight">
-                    {summary ? (summary.count || 0) : "—"}
-                  </p>
-                  <div className="mt-2 text-xs font-medium text-slate-400">
-                    Recorded logs
-                  </div>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-lg">
-                  <Receipt className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-
-            {/* Monthly Total */}
-            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    {monthName} Total
-                  </p>
-                  <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-amber-400 tracking-tight">
-                    {formatCurrency(monthlyTotal)}
-                  </p>
-                  <div className="mt-2 text-xs font-medium text-slate-400">
-                    Current month burn
-                  </div>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                  <CalendarRange className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-
-            {/* Budget Status */}
-            <div className="glass-card rounded-3xl p-6 group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" />
-              <div className="flex items-center justify-between relative z-10">
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Budget Target
-                  </p>
-                  {budgetStatus && (budgetStatus.budget > 0 || budgetStatus.spent > 0) ? (
-                    <>
-                      <p className="mt-2 text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                        {formatCurrency(budgetStatus.remaining)} left
-                      </p>
-                      <div className="mt-2 text-xs font-medium text-slate-400 truncate">
-                        {formatCurrency(budgetStatus.spent)} / {formatCurrency(budgetStatus.budget)}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mt-2 text-lg font-bold text-slate-400">Not Set</p>
-                      <div className="mt-2 text-xs font-medium text-violet-400">
-                        Configure target below
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300 shadow-lg">
-                  <Target className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
+            <p className="kpi-value">{formatCurrency(monthlyTotal)}</p>
+            <p className="kpi-hint">Current month burn</p>
           </div>
 
-          {/* Budget Section */}
-          <section className="mb-8">
-            <Budget onSaved={refreshAll} />
-          </section>
-
-          {/* Add Expense Section */}
-          <section className="glass-panel rounded-3xl p-6 sm:p-8 mb-8 border border-white/10 shadow-2xl relative overflow-hidden">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg">
-                <PlusCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white tracking-tight">Quick Expense Entry</h2>
-                <p className="text-xs text-slate-400">Log new transactions instantly into your ledger</p>
-              </div>
+          {/* Income credited */}
+          <div className="kpi">
+            <div className="flex items-start justify-between gap-3">
+              <p className="kpi-label">Income credited</p>
+              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-income-500/10 text-income-400">
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </span>
             </div>
-            <AddExpense onAdded={refreshAll} />
-          </section>
+            <p className="kpi-value text-income-400">+{formatCurrency(monthlyCredit)}</p>
+            <p className="kpi-hint">Credited in {monthName}</p>
+          </div>
 
-          {/* Date Selector Filter Bar */}
-          <div className="glass-card rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 border border-white/10">
-            <div className="flex items-center gap-2">
-              <CalendarRange className="w-5 h-5 text-indigo-400" />
-              <label className="font-bold text-slate-300 text-sm">Filter ledger by specific date:</label>
+          {/* Budget left */}
+          <div className="kpi">
+            <div className="flex items-start justify-between gap-3">
+              <p className="kpi-label">Budget left</p>
+              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-brand-500/10 text-brand-400">
+                <Target className="h-4 w-4" aria-hidden="true" />
+              </span>
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="date"
-                className="px-4 py-2 border border-white/20 rounded-xl text-white font-semibold text-sm bg-slate-800/80 focus:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 shadow-inner"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-              {selectedDate && (
-                <button
-                  onClick={() => setSelectedDate("")}
-                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-300 bg-white/10 hover:bg-white/20 transition-colors"
+            {hasBudget ? (
+              <>
+                <p
+                  className={`kpi-value ${
+                    (budgetStatus.remaining ?? 0) < 0 ? "text-expense-400" : ""
+                  }`}
                 >
-                  Clear Date
-                </button>
-              )}
-            </div>
+                  {formatCurrency(budgetStatus.remaining)}
+                </p>
+                <div
+                  className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]"
+                  role="progressbar"
+                  aria-label="Budget used"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(budgetPct)}
+                >
+                  <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${budgetPct}%` }} />
+                </div>
+                <p className="kpi-hint flex justify-between gap-2 tabular-nums">
+                  <span className="truncate">
+                    {formatCurrency(budgetStatus.spent)} / {formatCurrency(budgetStatus.budget)}
+                  </span>
+                  <span className={tone.text}>{budgetPct.toFixed(0)}%</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="kpi-value text-slate-500">Not set</p>
+                <p className="kpi-hint">Set a monthly budget below</p>
+              </>
+            )}
           </div>
 
-          {/* Main Expense List & Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Ledger & History</h2>
-                  <p className="text-xs text-slate-400">View, search, or edit recent transactions</p>
-                </div>
-              </div>
-              <ExpenseList
-                filters={filters}
-                setFilters={setFilters}
-                selectedDate={selectedDate}
-                refreshKey={refreshKey}
-              />
-            </section>
+          {/* All-time */}
+          <div className="kpi">
+            <div className="flex items-start justify-between gap-3">
+              <p className="kpi-label">All-time spent</p>
+              <span className="icon-tile hidden h-8 w-8 rounded-lg sm:flex bg-white/[0.06] text-slate-300">
+                <Wallet className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </div>
+            <p className="kpi-value">{summary ? formatCurrency(summary.total) : "—"}</p>
+            <p className="kpi-hint">
+              {summary ? `${summary.count || 0} entries recorded` : "Loading entries…"}
+            </p>
+          </div>
+        </section>
 
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Analytics & Trends</h2>
-                  <p className="text-xs text-slate-400">Visual breakdown of your category allocations</p>
-                </div>
+        {/* Add expense */}
+        <section className="card card-pad mb-6" aria-labelledby="add-expense-title">
+          <div className="card-header mb-4">
+            <div className="flex items-center gap-3">
+              <span className="icon-tile hidden bg-brand-500/10 text-brand-400 sm:flex">
+                <Plus className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 id="add-expense-title" className="card-title">Quick expense entry</h2>
+                <p className="card-subtitle">Log a new transaction to your ledger</p>
               </div>
-              <Charts />
-            </section>
+            </div>
+          </div>
+          <AddExpense onAdded={refreshAll} />
+        </section>
+
+        {/* Budget + daily chart */}
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <Budget onSaved={refreshAll} />
+          </div>
+          <div className="lg:col-span-3">
+            <Charts />
           </div>
         </div>
-      </div>
+
+        {/* Ledger */}
+        <ExpenseList
+          filters={filters}
+          setFilters={setFilters}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          refreshKey={refreshKey}
+        />
+      </main>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
-import { KeyRound, Mail, Lock, ArrowRight, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
+import { KeyRound, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, Wallet, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1); // 1 = enter email, 2 = enter code and new password
@@ -80,66 +80,87 @@ export default function ForgotPassword() {
     if (e.key === "Enter") step === 1 ? handleVerifyEmail() : handleResetPassword();
   };
 
+  const strength = newPassword.length < 4 ? "Weak" : newPassword.length < 8 ? "Fair" : "Strong";
+  const strengthColor = { Weak: "bg-expense-500", Fair: "bg-amber-400", Strong: "bg-income-500" }[strength];
+  const strengthText = { Weak: "text-expense-400", Fair: "text-amber-400", Strong: "text-income-400" }[strength];
+  const mismatch = confirmPassword && confirmPassword !== newPassword;
+  const matches = confirmPassword && confirmPassword === newPassword;
+
   return (
     <>
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+      <main className="flex min-h-screen items-center justify-center px-4 py-10 animate-fade-in">
+        <div className="w-full max-w-md">
+          <div className="mb-6 flex items-center justify-center gap-2.5 text-white">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500">
+              <Wallet className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">Expense Tracker</span>
+          </div>
 
-        <div className="w-full max-w-md relative z-10">
-          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/20 shadow-glow space-y-7 animate-slide-up">
-
+          <div className="card p-6 sm:p-8">
             {/* Header */}
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-black shadow-lg mb-4 ring-4 ring-white/10">
-                <KeyRound className="w-8 h-8" />
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold border border-indigo-500/30 mb-2">
-                <Sparkles className="w-3.5 h-3.5" /> Account Recovery
-              </div>
-              <h1 className="text-3xl font-black tracking-tight text-white">
-                {step === 1 ? "Reset Password" : "Verify Code"}
-              </h1>
-              <p className="text-slate-400 mt-1 text-sm font-medium">
-                {step === 1
-                  ? "Enter your account email to receive a secure recovery code"
-                  : `Enter the 6-digit verification code dispatched to ${email}`}
+            <div className="mb-6">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-slate-400">
+                <KeyRound className="h-3.5 w-3.5 text-brand-400" aria-hidden="true" />
+                Step {step} of 2
               </p>
-            </div>
-
-            {/* Step indicator */}
-            <div className="flex items-center gap-2">
-              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 1 ? "bg-gradient-to-r from-indigo-500 to-purple-600" : "bg-slate-700"}`} />
-              <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${step >= 2 ? "bg-gradient-to-r from-indigo-500 to-purple-600" : "bg-slate-700"}`} />
+              <h1 className="text-2xl font-semibold tracking-tight text-white">
+                {step === 1 ? "Reset your password" : "Enter your code"}
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                {step === 1 ? (
+                  "Enter your account email and we'll send you a 6-digit reset code."
+                ) : (
+                  <>
+                    We sent a 6-digit code to <span className="font-medium text-slate-200">{email}</span>.
+                  </>
+                )}
+              </p>
+              <div className="mt-4 flex gap-2" aria-hidden="true">
+                <div className="h-1 flex-1 rounded-full bg-brand-500" />
+                <div className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-brand-500" : "bg-white/10"}`} />
+              </div>
             </div>
 
             {/* Step 1 – Email */}
             {step === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-indigo-400" /> Email Address
-                  </label>
+                  <label htmlFor="fp-email" className="label">Email</label>
                   <input
+                    id="fp-email"
                     type="email"
+                    autoComplete="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyPress={handleKeyPress}
                     autoFocus
-                    className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
+                    className="input"
                   />
                 </div>
                 <button
+                  type="button"
                   onClick={handleVerifyEmail}
                   disabled={loading}
-                  className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+                  aria-busy={loading}
+                  className="btn-primary w-full"
                 >
-                  {loading ? "Verifying Email…" : "Send Reset Code →"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      Sending code…
+                    </>
+                  ) : (
+                    <>
+                      Send reset code
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -148,123 +169,134 @@ export default function ForgotPassword() {
             {step === 2 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
-                    6-Digit Reset Code
-                  </label>
+                  <label htmlFor="fp-code" className="label">6-digit reset code</label>
                   <input
+                    id="fp-code"
                     type="text"
                     inputMode="numeric"
+                    autoComplete="one-time-code"
                     maxLength="6"
                     placeholder="000000"
+                    aria-describedby="fp-code-hint"
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     onKeyPress={handleKeyPress}
                     autoFocus
-                    className="w-full px-4 py-3.5 bg-slate-50/90 border border-slate-200/80 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all tracking-[0.45em] font-black text-center text-lg text-primary-700 shadow-inner"
+                    className="input text-center text-lg font-semibold tracking-[0.4em] tabular-nums"
                   />
-                  <p className="text-[11px] font-semibold text-slate-400 mt-1.5 text-center">
-                    Expires in 10 minutes from dispatch.
-                  </p>
+                  <p id="fp-code-hint" className="field-hint">The code expires 10 minutes after it was sent.</p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-primary-600" /> New Password
-                  </label>
+                  <label htmlFor="fp-new" className="label">New password</label>
                   <div className="relative">
                     <input
+                      id="fp-new"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Min 6 characters"
+                      autoComplete="new-password"
+                      placeholder="At least 6 characters"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      className="w-full px-4 py-3.5 bg-slate-50/90 pr-12 border border-slate-200/80 rounded-2xl font-semibold text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all shadow-inner"
+                      className="input pr-12"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors text-xs font-bold"
+                      className="btn-icon absolute right-1 top-1/2 -translate-y-1/2"
+                      aria-label={showPassword ? "Hide passwords" : "Show passwords"}
+                      aria-pressed={showPassword}
                     >
-                      {showPassword ? "Hide" : "Show"}
+                      {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
                     </button>
                   </div>
 
                   {/* Password strength indicator */}
                   {newPassword.length > 0 && (
-                    <div className="mt-2 flex gap-1 items-center">
+                    <div className="mt-2 flex items-center gap-1.5">
                       {[1, 2, 3].map((level) => (
                         <div
                           key={level}
-                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                            newPassword.length >= level * 4
-                              ? level === 1 ? "bg-rose-500" : level === 2 ? "bg-amber-500" : "bg-emerald-500"
-                              : "bg-slate-200"
+                          className={`h-1 flex-1 rounded-full ${
+                            newPassword.length >= level * 4 ? strengthColor : "bg-white/10"
                           }`}
                         />
                       ))}
-                      <span className="text-[11px] font-black uppercase text-slate-400 ml-1.5">
-                        {newPassword.length < 4 ? "Weak" : newPassword.length < 8 ? "Fair" : "Strong"}
-                      </span>
+                      <span className={`ml-1.5 text-xs font-medium ${strengthText}`}>{strength}</span>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Confirm New Password
-                  </label>
+                  <label htmlFor="fp-confirm" className="label">Confirm new password</label>
                   <input
+                    id="fp-confirm"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder="Re-enter your password"
+                    aria-invalid={mismatch ? "true" : undefined}
+                    aria-describedby="fp-confirm-status"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className={`w-full px-4 py-3.5 border rounded-2xl font-semibold text-slate-800 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all ${
-                      confirmPassword && confirmPassword !== newPassword
-                        ? "border-rose-300 bg-rose-50/70"
-                        : confirmPassword && confirmPassword === newPassword
-                        ? "border-emerald-300 bg-emerald-50/70"
-                        : "border-slate-200/80 bg-slate-50/90"
+                    className={`input ${
+                      mismatch
+                        ? "border-expense-500/60 focus:border-expense-400 focus:ring-expense-400/30"
+                        : matches
+                        ? "border-income-500/50"
+                        : ""
                     }`}
                   />
-                  {confirmPassword && confirmPassword !== newPassword && (
-                    <p className="text-xs font-bold text-rose-500 mt-1.5">⚠ Passwords do not match</p>
-                  )}
-                  {confirmPassword && confirmPassword === newPassword && (
-                    <p className="text-xs font-bold text-emerald-600 mt-1.5">✓ Passwords exactly match</p>
-                  )}
+                  <div id="fp-confirm-status" aria-live="polite">
+                    {mismatch && (
+                      <p className="field-error flex items-center gap-1">
+                        <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" /> Passwords do not match
+                      </p>
+                    )}
+                    {matches && (
+                      <p className="mt-1.5 flex items-center gap-1 text-xs text-income-400">
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Passwords match
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleResetPassword}
                   disabled={loading}
-                  className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+                  aria-busy={loading}
+                  className="btn-primary w-full"
                 >
-                  {loading ? "Updating Password…" : "Save New Password & Sign In"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      Updating password…
+                    </>
+                  ) : (
+                    "Save new password"
+                  )}
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => { setStep(1); setResetCode(""); setNewPassword(""); setConfirmPassword(""); }}
-                  className="w-full py-2.5 text-xs font-extrabold text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1"
+                  className="btn-ghost w-full"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" /> Use a different email address
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Use a different email
                 </button>
               </div>
             )}
-
-            {/* Back to login */}
-            <div className="text-center pt-2 border-t border-slate-100">
-              <a href="/login" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-extrabold hover:underline">
-                <ArrowLeft className="w-4 h-4" /> Back to Sign In
-              </a>
-            </div>
           </div>
 
-          <p className="text-center text-slate-400 font-medium text-xs mt-6 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Secure 256-bit Identity Protection
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Remembered it?{" "}
+            <a href="/login" className="font-medium text-brand-400 hover:text-brand-300 hover:underline">
+              Back to sign in
+            </a>
           </p>
         </div>
-      </div>
+      </main>
     </>
   );
 }

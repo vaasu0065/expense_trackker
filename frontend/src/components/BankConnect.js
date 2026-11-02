@@ -3,7 +3,20 @@ import Navbar from "./Navbar";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import api from "../api";
-import { Landmark, ShieldCheck, RefreshCw, Link2, Sparkles, CheckCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { parseDate } from "../utils/date";
+import {
+  Landmark,
+  ShieldCheck,
+  RefreshCw,
+  Link2,
+  CheckCircle2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  Check,
+  Info,
+  Inbox,
+} from "lucide-react";
 
 function formatDateTime(value) {
   if (!value) return "Never";
@@ -14,6 +27,66 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatDay(value) {
+  if (!value) return "";
+  const d = parseDate(value);
+  return Number.isNaN(d.getTime())
+    ? String(value)
+    : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function StatusBadge({ status }) {
+  if (status === "active") {
+    return (
+      <span className="badge-income px-3 py-1 text-sm">
+        <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Connected
+      </span>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <span className="badge-warning px-3 py-1 text-sm">
+        <Clock className="h-4 w-4" aria-hidden="true" /> Awaiting approval
+      </span>
+    );
+  }
+  return (
+    <span className="badge-neutral px-3 py-1 text-sm">
+      <Link2 className="h-4 w-4" aria-hidden="true" />
+      {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Not connected"}
+    </span>
+  );
+}
+
+function Step({ number, state, title, description, children }) {
+  // state: "done" | "current" | "upcoming"
+  return (
+    <li
+      className={`flex gap-4 rounded-xl border p-4 sm:p-5 md:flex-col ${
+        state === "current" ? "border-brand-500/40 bg-brand-500/[0.06]" : "border-white/[0.08] bg-ink-850/60"
+      }`}
+      aria-current={state === "current" ? "step" : undefined}
+    >
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+          state === "done"
+            ? "bg-income-500/15 text-income-400"
+            : state === "current"
+            ? "bg-brand-500 text-white"
+            : "bg-white/[0.06] text-slate-400"
+        }`}
+      >
+        {state === "done" ? <Check className="h-4 w-4" aria-label="Done" /> : number}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h3 className={`text-[15px] font-semibold ${state === "upcoming" ? "text-slate-300" : "text-white"}`}>{title}</h3>
+        <p className="mt-1 text-sm text-slate-400">{description}</p>
+        {children && <div className="mt-4 md:mt-auto md:pt-4">{children}</div>}
+      </div>
+    </li>
+  );
 }
 
 export default function BankConnect() {
@@ -76,170 +149,213 @@ export default function BankConnect() {
   };
 
   const connected = connection?.status === "active";
+  const pending = connection?.status === "pending";
+  const synced = Boolean(connection?.last_synced_at);
+
+  const stepState = {
+    connect: connection ? "done" : "current",
+    approve: connected ? "done" : pending ? "current" : "upcoming",
+    sync: connected ? (synced ? "done" : "current") : "upcoming",
+  };
 
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
       <Navbar />
 
-      <div className="min-h-screen py-8 animate-fade-in">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Banner */}
-          <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  <Sparkles className="w-3.5 h-3.5" /> Secure Open Banking
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                Bank Data Connect
-              </h1>
-              <p className="mt-1 text-slate-300 text-sm sm:text-base">
-                Simulate real-time account verification and auto-sync transactions directly into your ledger.
-              </p>
-            </div>
+      <main className="page">
+        <header className="page-header">
+          <div>
+            <h1 className="page-title">Bank sync</h1>
+            <p className="page-subtitle">Link a bank account and pull its transactions into your ledger.</p>
+          </div>
+          <div className="self-start sm:self-auto">
+            <StatusBadge status={connection?.status} />
+          </div>
+        </header>
 
-            <div className="relative z-10 flex items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl font-bold text-sm shadow-sm border ${
-                  connected
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
-                    : connection?.status === "pending"
-                    ? "bg-amber-500/20 text-amber-300 border-amber-400/30 animate-pulse"
-                    : "bg-white/10 text-slate-300 border-white/15"
-                }`}
-              >
-                <Link2 className="w-4 h-4" />
-                Status: {connection?.status ? connection.status.toUpperCase() : "DISCONNECTED"}
-              </span>
+        {/* Steps */}
+        <section className="card card-pad mb-6" aria-labelledby="steps-title">
+          <div className="card-header">
+            <div>
+              <h2 id="steps-title" className="card-title">Connect in three steps</h2>
+              <p className="card-subtitle">Sandbox mode — no real bank credentials are used.</p>
             </div>
-          </header>
+          </div>
 
-          <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary-100/80 flex items-center justify-center text-primary-600 shadow-sm border border-primary-200/50">
-                  <Landmark className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Financial Institution Connection</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Provider Gateway: <strong className="text-slate-700">{connection?.provider || "None (Sandbox Mock)"}</strong>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 shadow-inner">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Linked Account</p>
-                <p className="font-extrabold text-slate-800 text-base">{connection?.account_mask || "No active account"}</p>
-              </div>
-              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 shadow-inner">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">OAuth Consent Token</p>
-                <p className="text-xs font-mono font-semibold text-slate-600 break-all">{connection?.consent_id || "Unassigned"}</p>
-              </div>
-              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 shadow-inner">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Last Sync Checkpoint</p>
-                <p className="font-extrabold text-slate-800 text-base">{formatDateTime(connection?.last_synced_at)}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-slate-100">
+          <ol className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+            <Step
+              number={1}
+              state={stepState.connect}
+              title="Connect"
+              description={connection ? "A consent request has been created." : "Start a consent request with the sandbox bank."}
+            >
               <button
                 type="button"
                 onClick={connect}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-extrabold rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 active:scale-95 text-sm"
+                className={`${connection ? "btn-secondary" : "btn-primary"} w-full sm:w-auto md:w-full`}
               >
-                <Link2 className="w-4 h-4" />
-                <span>{connection ? "Regenerate Consent" : "Simulate Bank Link"}</span>
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+                {connection ? "Regenerate consent" : "Connect sandbox bank"}
               </button>
-              {connection?.status === "pending" && (
+            </Step>
+
+            <Step
+              number={2}
+              state={stepState.approve}
+              title="Approve consent"
+              description={
+                connected
+                  ? "Consent approved. Your account is linked."
+                  : "Allow read-only access to your account transactions."
+              }
+            >
+              {pending && (
                 <button
                   type="button"
                   onClick={approve}
                   disabled={loading}
-                  className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold rounded-2xl shadow-card transition-all disabled:opacity-50 active:scale-95 text-sm animate-pulse"
+                  className="btn-primary w-full sm:w-auto md:w-full"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Approve Sandbox Consent</span>
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  Approve consent
                 </button>
               )}
+            </Step>
+
+            <Step
+              number={3}
+              state={stepState.sync}
+              title="Sync"
+              description={
+                synced ? `Last synced ${formatDateTime(connection.last_synced_at)}.` : "Pull the latest transactions into your ledger."
+              }
+            >
               <button
                 type="button"
                 onClick={sync}
                 disabled={loading || !connected}
-                className="flex items-center gap-2 px-6 py-3.5 border border-slate-200/80 text-slate-700 font-bold rounded-2xl bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95 text-sm"
+                className={`${connected ? "btn-primary" : "btn-secondary"} w-full sm:w-auto md:w-full`}
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                <span>Pull Latest Transactions</span>
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
+                {loading ? "Working…" : "Sync transactions"}
               </button>
+            </Step>
+          </ol>
+        </section>
+
+        {/* Connection details */}
+        <section className="card card-pad mb-6" aria-labelledby="details-title">
+          <div className="card-header mb-4">
+            <div className="flex items-center gap-3">
+              <div className="icon-tile bg-brand-500/15 text-brand-300">
+                <Landmark className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 id="details-title" className="card-title">Connection details</h2>
+                <p className="card-subtitle">Provider: {connection?.provider || "None (sandbox)"}</p>
+              </div>
             </div>
+          </div>
+
+          <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-3">
+            <div className="bg-ink-900 p-4">
+              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Linked account</dt>
+              <dd className={`mt-1.5 text-[15px] ${connection?.account_mask ? "font-mono text-white" : "text-slate-500"}`}>
+                {connection?.account_mask || "No account linked"}
+              </dd>
+            </div>
+            <div className="bg-ink-900 p-4">
+              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Last synced</dt>
+              <dd className={`mt-1.5 text-[15px] tabular-nums ${synced ? "text-white" : "text-slate-500"}`}>
+                {formatDateTime(connection?.last_synced_at)}
+              </dd>
+            </div>
+            <div className="min-w-0 bg-ink-900 p-4">
+              <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">Consent ID</dt>
+              <dd className={`mt-1.5 break-all ${connection?.consent_id ? "font-mono text-sm text-slate-200" : "text-[15px] text-slate-500"}`}>
+                {connection?.consent_id || "Not assigned"}
+              </dd>
+            </div>
+          </dl>
+
+          <p className="mt-4 flex items-start gap-2 text-xs text-slate-400">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            Synced transactions are added to your ledger as credits and debits. Duplicates are skipped.
+          </p>
+        </section>
+
+        {/* Last sync result */}
+        {lastSync && (
+          <section className="card card-pad animate-slide-up" aria-labelledby="sync-title">
+            <div className="card-header">
+              <div>
+                <h2 id="sync-title" className="card-title">Sync results</h2>
+                <p className="card-subtitle">What was imported in this sync</p>
+              </div>
+            </div>
+
+            <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="rounded-xl border border-white/[0.08] bg-ink-850 p-4">
+                <p className="kpi-label">Credits</p>
+                <p className="mt-1.5 text-2xl font-semibold tabular-nums text-income-400">
+                  {lastSync.imported?.creditCount || 0}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-ink-850 p-4">
+                <p className="kpi-label">Debits</p>
+                <p className="mt-1.5 text-2xl font-semibold tabular-nums text-expense-400">
+                  {lastSync.imported?.debitCount || 0}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-ink-850 p-4">
+                <p className="kpi-label">Total</p>
+                <p className="mt-1.5 text-2xl font-semibold tabular-nums text-white">{lastSync.imported?.count || 0}</p>
+              </div>
+            </div>
+
+            {lastSync.newTransactions?.length > 0 ? (
+              <>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-400">Synced transactions</h3>
+                <ul className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.08]">
+                  {lastSync.newTransactions.map((item) => {
+                    const credit = item.type === "credit";
+                    return (
+                      <li key={`${item.type}-${item.title}-${item.date}`} className="flex items-center gap-3 p-3.5 sm:p-4">
+                        <div
+                          className={`icon-tile ${credit ? "bg-income-500/15 text-income-400" : "bg-expense-500/15 text-expense-400"}`}
+                        >
+                          {credit ? (
+                            <ArrowDownLeft className="h-5 w-5" aria-hidden="true" />
+                          ) : (
+                            <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[15px] font-medium text-white">{item.title}</p>
+                          <p className="text-xs text-slate-400">
+                            {credit ? "Credit" : "Debit"} · {formatDay(item.date)}
+                            {item.time ? ` at ${item.time}` : ""}
+                          </p>
+                        </div>
+                        <span className={`shrink-0 text-[15px] ${credit ? "amount-in" : "amount-out"}`}>
+                          {credit ? "+" : "−"}₹{Number(item.amount).toLocaleString("en-IN")}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : (
+              <div className="empty-state rounded-xl border border-dashed border-white/10">
+                <Inbox className="h-6 w-6 text-slate-500" aria-hidden="true" />
+                <p>No new transactions were found in this sync.</p>
+              </div>
+            )}
           </section>
-
-          {lastSync && (
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card animate-slide-up">
-              <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Sync Summary Breakdown</h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
-                <div className="rounded-2xl bg-emerald-50/80 border border-emerald-200/60 p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-black text-emerald-700 uppercase tracking-wider">Credits Pulled</span>
-                    <ArrowDownRight className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                  </div>
-                  <p className="text-3xl font-black text-emerald-700">{lastSync.imported?.creditCount || 0}</p>
-                </div>
-
-                <div className="rounded-2xl bg-rose-50/80 border border-rose-200/60 p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-black text-rose-600 uppercase tracking-wider">Debits Pulled</span>
-                    <ArrowUpRight className="w-4 h-4 text-rose-600 stroke-[3]" />
-                  </div>
-                  <p className="text-3xl font-black text-rose-600">{lastSync.imported?.debitCount || 0}</p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-100/80 border border-slate-200/60 p-5 shadow-sm">
-                  <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-1">Total Processed</p>
-                  <p className="text-3xl font-black text-slate-800">{lastSync.imported?.count || 0}</p>
-                </div>
-              </div>
-
-              {lastSync.newTransactions?.length > 0 ? (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Synced Transaction Stream</h3>
-                  {lastSync.newTransactions.map((item) => (
-                    <div key={`${item.type}-${item.title}-${item.date}`} className="flex flex-wrap items-center justify-between gap-3 bg-white/80 border border-slate-100 rounded-2xl p-4 shadow-sm hover:scale-[1.003] transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${item.type === "credit" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                          {item.type === "credit" ? "+" : "-"}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">{item.title}</p>
-                          <p className="text-xs text-slate-500 font-medium">{item.date} at {item.time}</p>
-                        </div>
-                      </div>
-                      <span className={item.type === "credit" ? "font-black text-emerald-600 text-base" : "font-black text-rose-600 text-base"}>
-                        {item.type === "credit" ? "+" : "-"}₹{Number(item.amount).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-slate-500 font-medium">
-                  No new transactions were detected during this sync interval.
-                </div>
-              )}
-            </section>
-          )}
-        </div>
-      </div>
+        )}
+      </main>
     </>
   );
 }

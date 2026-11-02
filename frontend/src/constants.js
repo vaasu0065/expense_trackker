@@ -10,8 +10,8 @@ export const EXPENSE_CATEGORIES = [
   "Other",
 ];
 
-// Chart colors (consistent across Pie/Bar)
+// Categorical chart palette from design-system/MASTER.md (legible on the dark surfaces)
 export const CHART_COLORS = [
-  "#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#84cc16",
+  "#818CF8", "#34D399", "#FBBF24", "#FB7185", "#38BDF8",
+  "#C084FC", "#F472B6", "#A3E635",
 ];

@@ -1,25 +1,32 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../api";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  UploadCloud, 
-  Landmark, 
-  HandCoins, 
-  LogOut, 
-  Menu, 
-  X, 
-  Sparkles,
-  UserCheck,
-  RefreshCw
+import {
+  LayoutDashboard,
+  BarChart3,
+  UploadCloud,
+  Landmark,
+  HandCoins,
+  LogOut,
+  RefreshCw,
+  Wallet,
+  ChevronDown,
 } from "lucide-react";
+
+const navItems = [
+  { name: "Dashboard", short: "Dashboard", path: "/", icon: LayoutDashboard },
+  { name: "Statistics", short: "Stats", path: "/stats", icon: BarChart3 },
+  { name: "Import", short: "Import", path: "/import", icon: UploadCloud },
+  { name: "Bank Sync", short: "Bank", path: "/bank", icon: Landmark },
+  { name: "Lend & Borrow", short: "Lend", path: "/lendborrow", icon: HandCoins },
+];
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const location = useLocation();
+  const menuRef = useRef(null);
 
   const triggerHardRefresh = () => {
     setRefreshing(true);
@@ -47,44 +54,44 @@ export default function Navbar() {
     setMenuOpen(false);
   }, [location.pathname]);
 
+  // Close the user menu on outside click or Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
   const logout = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
-  const navItems = [
-    { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "Statistics", path: "/stats", icon: BarChart3 },
-    { name: "Import", path: "/import", icon: UploadCloud },
-    { name: "Bank Sync", path: "/bank", icon: Landmark },
-    { name: "Lend & Borrow", path: "/lendborrow", icon: HandCoins },
-  ];
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-2xl border-b border-white/10 shadow-2xl transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Brand Logo */}
-          <Link
-            to="/"
-            className="group flex items-center gap-3 text-white hover:text-indigo-400 transition-all duration-300"
-          >
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 text-white font-black text-xl shadow-lg group-hover:shadow-indigo-500/50 group-hover:scale-105 transition-all duration-300">
-              ₹
-              <Sparkles className="absolute -top-1 -right-1 w-3.5 h-3.5 text-amber-300 animate-pulseGlow" />
-            </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent block">
-                Expense Tracker
-              </span>
-              <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-widest -mt-1 block">
-                AI Ledger Pro
-              </span>
-            </div>
+    <>
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-ink-950/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          {/* Brand */}
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-xl text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white">
+              <Wallet className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="whitespace-nowrap text-base font-semibold tracking-tight">Expense Tracker</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 bg-[#131C31]/90 p-1.5 rounded-2xl border border-white/10 shadow-inner">
+          {/* Desktop navigation */}
+          <nav aria-label="Main" className="hidden min-w-0 items-center gap-1 md:flex">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -92,114 +99,117 @@ export default function Navbar() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex min-h-[40px] items-center gap-2 whitespace-nowrap rounded-xl px-3 text-sm font-medium transition-colors duration-150 ${
                     isActive
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-[1.02]"
-                      : "text-slate-300 hover:text-white hover:bg-white/10"
+                      ? "bg-brand-500/15 text-white"
+                      : "text-slate-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? "text-white scale-110" : "text-slate-400 group-hover:text-white"}`} />
-                  {item.name}
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${isActive ? "text-brand-400" : ""}`}
+                    aria-hidden="true"
+                  />
+                  <span className="lg:hidden">{item.short}</span>
+                  <span className="hidden lg:inline">{item.name}</span>
                 </Link>
               );
             })}
-          </div>
+          </nav>
 
-          {/* User Profile & Logout & PWA Hard Refresh */}
-          <div className="hidden md:flex items-center gap-2.5">
-            <button
-              onClick={triggerHardRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 transition-all duration-300 shadow-sm active:scale-95"
-              title="Force Check & Hard Refresh PWA"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              <span>{refreshing ? "Refreshing…" : "Update PWA"}</span>
-            </button>
-
-            {user && (
-              <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-2xl bg-white/5 border border-white/10 shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm font-semibold text-slate-200 truncate max-w-[120px]">
-                  {user.name}
-                </span>
-              </div>
-            )}
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white border border-rose-500/30 hover:border-transparent transition-all duration-300 shadow-sm active:scale-95"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-
-          {/* Mobile menu buttons */}
-          <div className="flex items-center gap-2 md:hidden">
-            <button
-              onClick={triggerHardRefresh}
-              disabled={refreshing}
-              className="p-2.5 rounded-xl text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 transition-all active:scale-95"
-              title="Update PWA"
-            >
-              <RefreshCw className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} />
-            </button>
+          {/* User menu */}
+          <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
-              className="p-2.5 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white border border-white/20 transition-all duration-200 active:scale-95"
               onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Toggle menu"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="Account menu"
+              className="flex min-h-[44px] items-center gap-2 rounded-xl px-1.5 text-slate-300 transition-colors duration-150 hover:bg-white/5 hover:text-white sm:px-2"
             >
-              {menuOpen ? <X className="w-6 h-6 text-rose-400" /> : <Menu className="w-6 h-6 text-slate-300" />}
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-700 text-sm font-semibold text-white">
+                {initial}
+              </span>
+              {user && (
+                <span className="hidden max-w-[140px] truncate text-sm font-medium xl:inline">
+                  {user.name}
+                </span>
+              )}
+              <ChevronDown className="hidden h-4 w-4 text-slate-500 sm:block" aria-hidden="true" />
             </button>
-          </div>
-        </div>
 
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden py-4 border-t border-white/10 bg-[#131C31]/95 animate-slide-down">
-            <div className="flex flex-col gap-1.5">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                        : "text-slate-300 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`} />
-                    {item.name}
-                  </Link>
-                );
-              })}
-              
-              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between px-4">
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-64 rounded-2xl border border-white/[0.08] bg-ink-900 p-1.5 shadow-pop animate-fade-in"
+              >
                 {user && (
-                  <div className="flex items-center gap-2.5">
-                    <UserCheck className="w-4 h-4 text-indigo-400" />
-                    <span className="text-sm font-semibold text-white">{user.name}</span>
+                  <div className="px-3 py-2.5">
+                    <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+                    {user.email && <p className="truncate text-xs text-slate-400">{user.email}</p>}
                   </div>
                 )}
+                {user && <div className="divider my-1" />}
                 <button
-                  onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500 hover:text-white transition-all ml-auto"
+                  type="button"
+                  role="menuitem"
+                  onClick={triggerHardRefresh}
+                  disabled={refreshing}
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-slate-200 transition-colors duration-150 hover:bg-white/5 disabled:opacity-60"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign Out
+                  <RefreshCw
+                    className={`h-4 w-4 text-slate-400 ${refreshing ? "animate-spin" : ""}`}
+                    aria-hidden="true"
+                  />
+                  {refreshing ? "Refreshing…" : "Refresh app"}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={logout}
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-expense-300 transition-colors duration-150 hover:bg-expense-500/10"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  Sign out
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      </header>
+
+      {/* Mobile bottom tab bar */}
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-ink-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      >
+        <ul className="grid grid-cols-5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex min-h-[56px] flex-col items-center justify-center gap-1 text-xs font-medium transition-colors duration-150 ${
+                    isActive ? "text-brand-300" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span
+                    className={`flex h-7 w-12 items-center justify-center rounded-full ${
+                      isActive ? "bg-brand-500/15" : ""
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  {item.short}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </>
   );
 }

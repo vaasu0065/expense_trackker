@@ -1,7 +1,11 @@
-const CACHE_NAME = "expense-tracker-pro-v2-" + new Date().toISOString().split("T")[0];
+// Bump this when the caching strategy changes; old caches are deleted on activate.
+// (A date-based name changed every time the browser restarted the worker, leaking caches.)
+const CACHE_NAME = "expense-tracker-pro-v3";
 
-// Files to pre-cache
+// Files to pre-cache, including the app shell used as the offline fallback
 const STATIC_ASSETS = [
+  "/",
+  "/index.html",
   "/manifest.json",
   "/favicon.ico",
   "/logo192.png",
@@ -40,37 +44,48 @@ self.addEventListener("message", (event) => {
   }
 });
 
-// Fetch — Network-First for HTML/navigate and API, Cache-First for static JS/CSS assets
+function cacheResponse(request, response) {
+  if (response && response.status === 200) {
+    const clone = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  // Always go network-first without caching for API calls and navigation (HTML pages)
-  if (
-    event.request.mode === "navigate" ||
-    event.request.url.includes("/auth/") ||
-    event.request.url.includes("/expenses") ||
-    event.request.url.includes("/budget") ||
-    event.request.url.includes("/lendborrow") ||
-    event.request.url.includes("/service-worker.js")
-  ) {
+  const url = new URL(event.request.url);
+
+  // Only handle this site's own files. API calls go to the backend's domain and
+  // must never be cached (they hold per-user data that would outlive logout).
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname === "/service-worker.js") return;
+
+  // Pages: network-first so new deploys show up, falling back to the cached app shell offline
+  if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request, { cache: "no-store" })
-        .then((response) => response)
-        .catch(() => caches.match(event.request) || caches.match("/"))
+        .then((response) => cacheResponse("/index.html", response))
+        .catch(() => caches.match("/index.html"))
     );
     return;
   }
 
-  // Network-First with cache fallback for other files
+  // Build assets have content hashes in their names, so a cached copy is never stale
+  if (url.pathname.startsWith("/static/")) {
+    event.respondWith(
+      caches.match(event.request).then(
+        (cached) => cached || fetch(event.request).then((response) => cacheResponse(event.request, response))
+      )
+    );
+    return;
+  }
+
+  // Everything else: network-first with cache fallback
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
+      .then((response) => cacheResponse(event.request, response))
       .catch(() => caches.match(event.request))
   );
 });

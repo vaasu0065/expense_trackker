@@ -2,12 +2,13 @@ import { useState } from "react";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
-import { LogIn, Mail, Lock, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Wallet } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
   const login = async (isRetry = false) => {
@@ -73,105 +74,98 @@ export default function Login() {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
-        {/* Background ambient glowing spheres */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+      <main className="flex min-h-screen items-center justify-center px-4 py-10 animate-fade-in">
+        <div className="w-full max-w-md">
+          <div className="mb-6 flex items-center justify-center gap-2.5 text-white">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500">
+              <Wallet className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">Expense Tracker</span>
+          </div>
 
-        <div className="w-full max-w-md relative z-10">
-          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/20 shadow-glow space-y-7">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl font-black shadow-lg mb-4 ring-4 ring-white/10">
-                ₹
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-extrabold border border-indigo-500/30 mb-2">
-                <Sparkles className="w-3.5 h-3.5" /> Expense Tracker Pro
-              </div>
-              <h1 className="text-3xl font-black tracking-tight text-white">Welcome Back</h1>
-              <p className="text-slate-400 mt-1 text-sm font-medium">Sign in to manage and analyze your wealth</p>
+          <div className="card p-6 sm:p-8">
+            <div className="mb-6">
+              <h1 className="text-2xl font-semibold tracking-tight text-white">Welcome back</h1>
+              <p className="mt-1 text-sm text-slate-400">Sign in to manage your expenses.</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-indigo-400" /> Email Address
-                </label>
+                <label htmlFor="login-email" className="label">Email</label>
                 <input
+                  id="login-email"
                   type="email"
+                  autoComplete="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
+                  className="input"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-indigo-400" /> Password
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label htmlFor="login-password" className="text-sm font-medium text-slate-300">
+                    Password
                   </label>
-                  <a
-                    href="/forgot-password"
-                    className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold transition-colors"
-                  >
+                  <a href="/forgot-password" className="text-sm font-medium text-brand-400 hover:text-brand-300 hover:underline">
                     Forgot password?
                   </a>
                 </div>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full px-4 py-3.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-white placeholder-slate-400 text-sm focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 outline-none transition-all shadow-inner"
-                />
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="input pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="btn-icon absolute right-1 top-1/2 -translate-y-1/2"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                  </button>
+                </div>
               </div>
 
               <button
+                type="button"
                 onClick={() => login()}
                 disabled={loading}
-                className="w-full py-4 px-4 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black text-base rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
+                aria-busy={loading}
+                className="btn-primary mt-2 w-full"
               >
                 {loading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Authenticating…</span>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    Signing in…
                   </>
                 ) : (
                   <>
-                    <span>Sign In to Dashboard</span>
-                    <ArrowRight className="w-5 h-5" />
+                    Sign in
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </>
                 )}
               </button>
             </div>
-
-            <div className="relative pt-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-wider font-extrabold">
-                <span className="px-3 bg-white/90 rounded-full text-slate-400">Don't have an account?</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <a
-                href="/register"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-sm transition-all active:scale-95 border border-slate-200/80"
-              >
-                <span>Create a New Account</span>
-                <Sparkles className="w-4 h-4 text-primary-600" />
-              </a>
-            </div>
           </div>
 
-          <p className="text-center text-slate-400 font-medium text-xs mt-6 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Bank-grade encryption & automated sync
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Don't have an account?{" "}
+            <a href="/register" className="font-medium text-brand-400 hover:text-brand-300 hover:underline">
+              Create one
+            </a>
           </p>
         </div>
-      </div>
+      </main>
     </>
   );
 }

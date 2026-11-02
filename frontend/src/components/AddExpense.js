@@ -2,9 +2,9 @@ import { useState } from "react";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
-import { Tag, IndianRupee, FolderHeart, Calendar, Clock, Plus, Sparkles } from "lucide-react";
+import { todayLocal } from "../utils/date";
+import { Plus } from "lucide-react";
 
-const getToday = () => new Date().toISOString().split("T")[0];
 const getNow = () => new Date().toTimeString().slice(0, 5); // HH:MM
 
 const POPULAR_CATEGORIES = ["Food & Dining", "Groceries", "Transport", "Shopping", "Entertainment", "Utilities", "Health"];
@@ -14,7 +14,7 @@ export default function AddExpense({ onAdded }) {
     title: "",
     amount: "",
     category: "",
-    date: getToday(),
+    date: todayLocal(),
     time: getNow(),
   });
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function AddExpense({ onAdded }) {
         category: form.category.trim(),
       });
       showToast("Expense added successfully!", "success");
-      setForm({ title: "", amount: "", category: "", date: getToday(), time: getNow() });
+      setForm({ title: "", amount: "", category: "", date: todayLocal(), time: getNow() });
       if (typeof onAdded === "function") onAdded();
     } catch (err) {
       showToast(err.response?.data?.msg || "Something went wrong", "error");
@@ -54,113 +54,95 @@ export default function AddExpense({ onAdded }) {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
 
-      <form onSubmit={save} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-          {/* Title */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1">
-              <Tag className="w-3.5 h-3.5 text-indigo-400" /> Title
-            </label>
+      <form onSubmit={save} className="space-y-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label htmlFor="add-title" className="label">Title</label>
             <input
+              id="add-title"
               type="text"
-              placeholder="e.g. Starbucks Coffee"
+              placeholder="e.g. Starbucks coffee"
               value={form.title}
               onChange={set("title")}
-              className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 outline-none transition-all shadow-inner"
+              className="input"
             />
           </div>
 
-          {/* Amount */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1">
-              <IndianRupee className="w-3.5 h-3.5 text-emerald-400" /> Amount (₹)
-            </label>
+          <div className="lg:col-span-2">
+            <label htmlFor="add-amount" className="label">Amount</label>
             <div className="relative">
+              <span
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] text-slate-400"
+                aria-hidden="true"
+              >
+                ₹
+              </span>
               <input
+                id="add-amount"
                 type="number"
                 min="0"
                 step="0.01"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={form.amount}
                 onChange={set("amount")}
-                className="w-full pl-8 pr-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-bold text-sm text-emerald-400 placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 outline-none transition-all shadow-inner"
+                className="input pl-8 font-semibold tabular-nums"
               />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
             </div>
           </div>
 
-          {/* Category */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1">
-              <FolderHeart className="w-3.5 h-3.5 text-blue-400" /> Category
-            </label>
+          <div className="lg:col-span-3">
+            <label htmlFor="add-category" className="label">Category</label>
             <input
+              id="add-category"
               type="text"
               placeholder="e.g. Dining"
               value={form.category}
               onChange={set("category")}
-              className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white placeholder-slate-400 focus:bg-[#1E2B48] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 outline-none transition-all shadow-inner"
+              className="input"
             />
           </div>
 
-          {/* Date */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-amber-400" /> Date
-            </label>
-            <input
-              type="date"
-              value={form.date}
-              onChange={set("date")}
-              className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-amber-500/50 focus:border-amber-400 outline-none transition-all shadow-inner"
-            />
+          <div className="lg:col-span-2">
+            <label htmlFor="add-date" className="label">Date</label>
+            <input id="add-date" type="date" value={form.date} onChange={set("date")} className="input tabular-nums" />
           </div>
 
-          {/* Time */}
-          <div className="lg:col-span-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-purple-400" /> Time
-            </label>
-            <input
-              type="time"
-              value={form.time}
-              onChange={set("time")}
-              className="w-full px-3.5 py-2.5 bg-[#1A253D] border border-white/20 rounded-2xl font-semibold text-sm text-white focus:bg-[#1E2B48] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 outline-none transition-all shadow-inner"
-            />
-          </div>
-
-          {/* Submit */}
-          <div className="lg:col-span-1">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 hover:from-indigo-500 hover:to-pink-400 text-white font-extrabold rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>{loading ? "Adding…" : "Log Entry"}</span>
-            </button>
+          <div className="lg:col-span-2">
+            <label htmlFor="add-time" className="label">Time</label>
+            <input id="add-time" type="time" value={form.time} onChange={set("time")} className="input tabular-nums" />
           </div>
         </div>
 
-        {/* Quick Category Pills */}
-        <div className="pt-2 flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-bold uppercase text-slate-400 flex items-center gap-1 mr-1">
-            <Sparkles className="w-3 h-3 text-amber-400" /> Quick Select:
-          </span>
-          {POPULAR_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => selectCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
-                form.category === cat
-                  ? "bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/30 scale-105"
-                  : "bg-[#1A253D] text-slate-200 border-white/10 hover:border-indigo-400 hover:bg-white/10"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div role="group" aria-labelledby="quick-cat-label" className="flex flex-wrap items-center gap-2">
+            <span id="quick-cat-label" className="mr-1 text-xs font-medium text-slate-400">
+              Quick pick
+            </span>
+            {POPULAR_CATEGORIES.map((cat) => {
+              const active = form.category === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => selectCategory(cat)}
+                  aria-pressed={active}
+                  className={`min-h-[36px] rounded-full border px-3 text-xs font-medium transition-colors duration-150 ${
+                    active
+                      ? "border-brand-400/60 bg-brand-500/15 text-brand-300"
+                      : "border-white/10 bg-ink-850 text-slate-300 hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-primary w-full shrink-0 lg:w-auto lg:min-w-[160px]">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            {loading ? "Adding…" : "Add expense"}
+          </button>
         </div>
       </form>
     </>

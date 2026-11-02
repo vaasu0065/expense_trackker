@@ -1,5 +1,12 @@
 import { useEffect } from "react";
-import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
+
+const VARIANTS = {
+  success: { Icon: CheckCircle2, accent: "bg-income-500", icon: "text-income-400" },
+  error: { Icon: AlertCircle, accent: "bg-expense-500", icon: "text-expense-400" },
+  info: { Icon: Info, accent: "bg-brand-500", icon: "text-brand-400" },
+  warning: { Icon: AlertTriangle, accent: "bg-amber-500", icon: "text-amber-400" },
+};
 
 export default function Toast({ message, type = "success", onClose, duration = 4000 }) {
   useEffect(() => {
@@ -7,41 +14,25 @@ export default function Toast({ message, type = "success", onClose, duration = 4
     return () => clearTimeout(timer);
   }, [onClose, duration]);
 
-  const icons = {
-    success: <CheckCircle className="w-5 h-5 flex-shrink-0" />,
-    error: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
-    info: <Info className="w-5 h-5 flex-shrink-0" />,
-    warning: <AlertTriangle className="w-5 h-5 flex-shrink-0" />,
-  };
-
-  const styles = {
-    success: "bg-emerald-950/80 text-emerald-100 border-emerald-500/30 ring-emerald-500/20",
-    error: "bg-rose-950/80 text-rose-100 border-rose-500/30 ring-rose-500/20",
-    info: "bg-indigo-950/80 text-indigo-100 border-indigo-500/30 ring-indigo-500/20",
-    warning: "bg-amber-950/80 text-amber-100 border-amber-500/30 ring-amber-500/20",
-  };
-
-  const iconColors = {
-    success: "text-emerald-400 bg-emerald-500/20 p-1.5 rounded-xl border border-emerald-500/30",
-    error: "text-rose-400 bg-rose-500/20 p-1.5 rounded-xl border border-rose-500/30",
-    info: "text-indigo-400 bg-indigo-500/20 p-1.5 rounded-xl border border-indigo-500/30",
-    warning: "text-amber-400 bg-amber-500/20 p-1.5 rounded-xl border border-amber-500/30",
-  };
+  const { Icon, accent, icon } = VARIANTS[type] || VARIANTS.info;
 
   return (
-    <div className="fixed top-5 right-5 z-[200] animate-slide-in">
-      <div
-        className={`flex items-center gap-3.5 px-4.5 py-3.5 rounded-2xl shadow-glow backdrop-blur-xl border ring-1 ${styles[type]} min-w-[300px] max-w-md transition-all`}
-      >
-        <div className={iconColors[type]}>{icons[type]}</div>
-        <p className="flex-1 font-bold text-sm tracking-tight leading-snug">{message}</p>
+    <div
+      className="fixed inset-x-4 top-4 z-[200] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end"
+      role={type === "error" ? "alert" : "status"}
+      aria-live={type === "error" ? "assertive" : "polite"}
+    >
+      <div className="relative flex w-full max-w-md items-start gap-3 overflow-hidden rounded-xl border border-white/10 bg-ink-850 py-3 pl-4 pr-2 shadow-pop animate-slide-in sm:min-w-[320px]">
+        <span className={`absolute inset-y-0 left-0 w-1 ${accent}`} aria-hidden="true" />
+        <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${icon}`} aria-hidden="true" />
+        <p className="flex-1 py-0.5 text-sm font-medium leading-snug text-slate-100">{message}</p>
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/10 transition-all active:scale-90"
-          aria-label="Dismiss"
+          className="-my-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-white/5 hover:text-white"
+          aria-label="Dismiss notification"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

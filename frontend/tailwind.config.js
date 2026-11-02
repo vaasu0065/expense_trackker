@@ -1,71 +1,51 @@
 /** @type {import('tailwindcss').Config} */
+// Design system: dark slate (OLED) base, indigo for actions,
+// emerald only for money in, rose only for money out, amber for warnings.
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: "#effef6",
-          100: "#d9fbe8",
-          200: "#b3f5d1",
-          300: "#7aebba",
-          400: "#3ed99c",
-          500: "#10b981",
-          600: "#059669",
-          700: "#047857",
-          800: "#065f46",
-          900: "#064e3b",
+        // Surfaces, darkest to lightest
+        ink: {
+          950: "#020617", // page background
+          900: "#0B1222", // cards
+          850: "#101A2E", // inputs, raised areas inside cards
+          800: "#16223A", // hover
+          700: "#22304D", // strong borders, dividers
         },
-        surface: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          800: "#1e293b",
-          900: "#0f172a",
+        brand: {
+          300: "#A5B4FC",
+          400: "#818CF8",
+          500: "#6366F1",
+          600: "#4F46E5",
+          700: "#4338CA",
         },
+        income: { 300: "#6EE7B7", 400: "#34D399", 500: "#10B981", 600: "#059669" },
+        expense: { 300: "#FDA4AF", 400: "#FB7185", 500: "#F43F5E", 600: "#E11D48" },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["IBM Plex Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+        mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       boxShadow: {
-        card: "0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)",
-        "card-hover": "0 14px 30px -4px rgba(16, 185, 129, 0.12), 0 8px 15px -6px rgba(0, 0, 0, 0.05)",
-        glass: "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
-        glow: "0 0 25px rgba(16, 185, 129, 0.35)",
+        card: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 24px -12px rgba(0,0,0,0.6)",
+        pop: "0 20px 40px -16px rgba(0,0,0,0.7)",
       },
       animation: {
-        "fade-in": "fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        "slide-down": "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        "scale-up": "scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        float: "float 4s ease-in-out infinite",
-        pulseGlow: "pulseGlow 2.5s ease-in-out infinite",
+        "fade-in": "fadeIn 0.2s ease-out",
+        "slide-up": "slideUp 0.25s ease-out",
+        "slide-in": "slideIn 0.25s ease-out",
       },
       keyframes: {
-        fadeIn: {
-          "0%": { opacity: "0", transform: "scale(0.98)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
-        },
+        fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
         slideUp: {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        slideDown: {
-          "0%": { opacity: "0", transform: "translateY(-15px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        scaleUp: {
-          "0%": { opacity: "0", transform: "scale(0.93)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-6px)" },
-        },
-        pulseGlow: {
-          "0%, 100%": { opacity: "0.8", transform: "scale(1)" },
-          "50%": { opacity: "1", transform: "scale(1.03)" },
+        slideIn: {
+          "0%": { opacity: "0", transform: "translateX(16px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
         },
       },
     },

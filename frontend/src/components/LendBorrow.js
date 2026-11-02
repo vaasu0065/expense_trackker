@@ -1,39 +1,69 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Navbar from "./Navbar";
 import api from "../api";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import useAutoRefresh from "../hooks/useAutoRefresh";
-import { 
-  Users, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Scale, 
-  AlertTriangle, 
-  Plus, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  Trash2, 
-  Sparkles,
-  DollarSign
+import {
+  Users,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Scale,
+  AlertTriangle,
+  Plus,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  Check,
+  Trash2,
+  X,
 } from "lucide-react";
+import { todayLocal, parseDate } from "../utils/date";
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = todayLocal;
 
 function formatCurrency(n) {
   return `₹${(parseFloat(n) || 0).toLocaleString("en-IN")}`;
 }
 function formatDate(d) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return parseDate(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 function isOverdue(due_date, status) {
   if (!due_date || status === "settled") return false;
-  return new Date(due_date) < new Date(new Date().toDateString());
+  return String(due_date).slice(0, 10) < todayLocal();
 }
 
 const emptyForm = { type: "lend", person_name: "", amount: "", note: "", date: today(), due_date: "" };
+
+const TYPE_FILTERS = [
+  { value: "", label: "All" },
+  { value: "lend", label: "Lent" },
+  { value: "borrow", label: "Borrowed" },
+];
+const STATUS_FILTERS = [
+  { value: "pending", label: "Pending" },
+  { value: "settled", label: "Settled" },
+  { value: "", label: "All" },
+];
+
+function Segmented({ label, options, value, onChange }) {
+  return (
+    <div role="group" aria-label={label} className="segmented">
+      {options.map((o) => (
+        <button
+          key={o.value || "all"}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={`segmented-item ${value === o.value ? "segmented-item-active" : ""}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function LendBorrow() {
   const [entries, setEntries] = useState([]);
@@ -68,9 +98,18 @@ export default function LendBorrow() {
     }
   }, [filterType, filterStatus, showToast]);
 
-  useEffect(() => { load(); loadSummary(); }, [load, loadSummary]);
+  const refresh = useCallback(() => { load(); loadSummary(); }, [load, loadSummary]);
 
-  useAutoRefresh(load);
+  // Loads immediately, then every 5 minutes (summary included)
+  useAutoRefresh(refresh);
+
+  // Close the add-entry dialog with Escape
+  useEffect(() => {
+    if (!showForm) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setShowForm(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showForm]);
 
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 
@@ -120,338 +159,354 @@ export default function LendBorrow() {
   const netBalance = summary
     ? parseFloat(summary.total_lent) - parseFloat(summary.total_borrowed)
     : 0;
+  const overdueCount = parseInt(summary?.overdue_count, 10) || 0;
 
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
       <Navbar />
 
-      <div className="min-h-screen py-8 animate-fade-in">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="page">
+        <header className="page-header">
+          <div>
+            <h1 className="page-title">Lend &amp; Borrow</h1>
+            <p className="page-subtitle">Track money you’ve lent to friends and money you owe.</p>
+          </div>
+          <button type="button" onClick={() => setShowForm(true)} className="btn-primary self-start sm:self-auto">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add entry
+          </button>
+        </header>
 
-          {/* Header Banner */}
-          <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  <Sparkles className="w-3.5 h-3.5" /> Credit & Debt Log
-                </span>
+        {/* Summary */}
+        <section aria-label="Summary" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {summary ? (
+            <>
+              <div className="kpi">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="kpi-label">You lent</span>
+                  <ArrowUpRight className="h-4 w-4 text-income-400" aria-hidden="true" />
+                </div>
+                <p className="kpi-value text-income-400">{formatCurrency(summary.total_lent)}</p>
+                <p className="kpi-hint">Others owe you</p>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                Lend & Borrow Tracker
-              </h1>
-              <p className="mt-1 text-slate-300 text-sm sm:text-base">
-                Keep crystal clear tabs on funds you gave out or borrowed from friends.
+
+              <div className="kpi">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="kpi-label">You borrowed</span>
+                  <ArrowDownLeft className="h-4 w-4 text-expense-400" aria-hidden="true" />
+                </div>
+                <p className="kpi-value text-expense-400">{formatCurrency(summary.total_borrowed)}</p>
+                <p className="kpi-hint">You owe others</p>
+              </div>
+
+              <div className="kpi">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="kpi-label">Net balance</span>
+                  <Scale className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                </div>
+                <p className={`kpi-value ${netBalance > 0 ? "text-income-400" : netBalance < 0 ? "text-expense-400" : ""}`}>
+                  {netBalance > 0 ? "+" : netBalance < 0 ? "−" : ""}
+                  {formatCurrency(Math.abs(netBalance))}
+                </p>
+                <p className="kpi-hint">{netBalance >= 0 ? "In your favour" : "You owe overall"}</p>
+              </div>
+
+              <div className="kpi">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="kpi-label">Overdue</span>
+                  <AlertTriangle
+                    className={`h-4 w-4 ${overdueCount > 0 ? "text-amber-400" : "text-slate-500"}`}
+                    aria-hidden="true"
+                  />
+                </div>
+                <p className={`kpi-value ${overdueCount > 0 ? "text-amber-400" : ""}`}>{overdueCount}</p>
+                <p className="kpi-hint">{overdueCount === 1 ? "Entry past due date" : "Entries past due date"}</p>
+              </div>
+            </>
+          ) : (
+            [0, 1, 2, 3].map((i) => (
+              <div key={i} className="kpi">
+                <div className="skeleton h-3 w-20" />
+                <div className="skeleton mt-3 h-7 w-28" />
+                <div className="skeleton mt-2 h-3 w-24" />
+              </div>
+            ))
+          )}
+        </section>
+
+        {/* Entries */}
+        <section className="card" aria-labelledby="entries-title">
+          <div className="flex flex-col gap-3 border-b border-white/[0.08] p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 id="entries-title" className="card-title">Entries</h2>
+              <p className="card-subtitle">
+                {loading ? "Loading…" : `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
               </p>
             </div>
-
-            <button
-              onClick={() => setShowForm((v) => !v)}
-              className="relative z-10 flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-card hover:shadow-glow transition-all active:scale-95 text-sm"
-            >
-              <Plus className={`w-5 h-5 transition-transform duration-300 ${showForm ? "rotate-45" : ""}`} />
-              <span>{showForm ? "Close Form" : "Add Transaction"}</span>
-            </button>
-          </header>
-
-          {/* Summary Cards */}
-          {summary && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">You Lent</span>
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/50 flex items-center justify-center text-blue-600">
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xl sm:text-2xl font-black text-blue-600">{formatCurrency(summary.total_lent)}</p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-0.5">Others owe you</p>
-                </div>
-              </div>
-
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">You Borrowed</span>
-                  <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/50 flex items-center justify-center text-orange-600">
-                    <ArrowDownLeft className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xl sm:text-2xl font-black text-orange-500">{formatCurrency(summary.total_borrowed)}</p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-0.5">You owe others</p>
-                </div>
-              </div>
-
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Net Balance</span>
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/50 flex items-center justify-center text-emerald-600">
-                    <Scale className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <div>
-                  <p className={`text-xl sm:text-2xl font-black ${netBalance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                    {netBalance >= 0 ? "+" : ""}{formatCurrency(Math.abs(netBalance))}
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-0.5">{netBalance >= 0 ? "In your favour" : "You owe net"}</p>
-                </div>
-              </div>
-
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Overdue Due</span>
-                  <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-600">
-                    <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <div>
-                  <p className={`text-xl sm:text-2xl font-black ${parseInt(summary.overdue_count) > 0 ? "text-rose-600 animate-pulse" : "text-slate-400"}`}>
-                    {summary.overdue_count}
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-400 mt-0.5">Past due date</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Add form */}
-          {showForm && (
-            <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card mb-8 animate-slide-up">
-              <h2 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-primary-600" /> Record New Transaction
-              </h2>
-              <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-                {/* Type toggle */}
-                <div className="sm:col-span-2 lg:col-span-3">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Transaction Type</label>
-                  <div className="flex gap-4">
-                    {["lend", "borrow"].map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setForm((p) => ({ ...p, type: t }))}
-                        className={`flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-sm border flex items-center justify-center gap-2 ${
-                          form.type === t
-                            ? t === "lend"
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-card"
-                              : "bg-gradient-to-r from-orange-500 to-amber-600 border-orange-500 text-white shadow-card"
-                            : "bg-slate-50/80 border-slate-200 text-slate-600 hover:bg-slate-100"
-                        }`}
-                      >
-                        {t === "lend" ? <ArrowUpRight className="w-4 h-4 stroke-[3]" /> : <ArrowDownLeft className="w-4 h-4 stroke-[3]" />}
-                        <span>{t === "lend" ? "I Lent Money (They Owe Me)" : "I Borrowed Money (I Owe Them)"}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    {form.type === "lend" ? "Lent to" : "Borrowed from"}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Person's name"
-                    value={form.person_name}
-                    onChange={set("person_name")}
-                    className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Amount (₹)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={form.amount}
-                    onChange={set("amount")}
-                    className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl font-black text-sm text-emerald-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Date</label>
-                  <input
-                    type="date"
-                    value={form.date}
-                    onChange={set("date")}
-                    className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Due date <span className="text-slate-400 font-normal">(optional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.due_date}
-                    onChange={set("due_date")}
-                    className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Note <span className="text-slate-400 font-normal">(optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. For dinner, rent split…"
-                    value={form.note}
-                    onChange={set("note")}
-                    className="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="sm:col-span-2 lg:col-span-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-3.5 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-black rounded-xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 active:scale-95"
-                  >
-                    {submitting ? "Saving Entry…" : "Save Ledger Entry"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
-            <div className="flex gap-3">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 bg-white text-slate-700 outline-none shadow-sm"
-              >
-                <option value="">All Types</option>
-                <option value="lend">💸 Lent Only</option>
-                <option value="borrow">🤝 Borrowed Only</option>
-              </select>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary-500 bg-white text-slate-700 outline-none shadow-sm"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending Settlement</option>
-                <option value="settled">Settled & Closed</option>
-              </select>
+            <div className="flex flex-wrap gap-2">
+              <Segmented label="Filter by type" options={TYPE_FILTERS} value={filterType} onChange={setFilterType} />
+              <Segmented label="Filter by status" options={STATUS_FILTERS} value={filterStatus} onChange={setFilterStatus} />
             </div>
           </div>
 
-          {/* Entries list */}
-          <div className="space-y-4">
-            {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-3">
-                <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm font-semibold">Syncing records…</span>
+          {loading ? (
+            <ul aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="flex items-center gap-4 border-b border-white/[0.05] p-4 last:border-0 sm:p-5">
+                  <div className="skeleton h-10 w-10 rounded-xl" />
+                  <div className="flex-1">
+                    <div className="skeleton h-4 w-32" />
+                    <div className="skeleton mt-2 h-3 w-48" />
+                  </div>
+                  <div className="skeleton h-5 w-20" />
+                </li>
+              ))}
+            </ul>
+          ) : entries.length === 0 ? (
+            <div className="empty-state">
+              <div className="icon-tile mb-2 bg-white/[0.06] text-slate-400">
+                <Users className="h-5 w-5" aria-hidden="true" />
               </div>
-            ) : entries.length === 0 ? (
-              <div className="py-16 text-center glass-panel rounded-3xl border border-dashed border-slate-200">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
-                  <Users className="w-7 h-7" />
-                </div>
-                <p className="text-slate-700 font-bold text-base mb-1">No transactions logged yet</p>
-                <p className="text-slate-400 text-xs mt-1">Click the + Add Transaction button above to record a credit or debt</p>
-              </div>
-            ) : (
-              entries.map((e) => {
+              <p className="text-base font-medium text-slate-200">No entries here yet</p>
+              <p className="max-w-sm">
+                {filterType || filterStatus
+                  ? "Nothing matches these filters. Try another filter or add a new entry."
+                  : "Record money you lend or borrow to keep track of who owes what."}
+              </p>
+              <button type="button" onClick={() => setShowForm(true)} className="btn-secondary mt-3">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add entry
+              </button>
+            </div>
+          ) : (
+            <ul>
+              {entries.map((e) => {
                 const overdue = isOverdue(e.due_date, e.status);
+                const lend = e.type === "lend";
+                const settled = e.status === "settled";
                 return (
-                  <div
+                  <li
                     key={e.id}
-                    className={`glass-panel rounded-2xl p-5 flex flex-wrap items-center gap-4 transition-all duration-300 hover:scale-[1.006] ${
-                      overdue
-                        ? "border-rose-300/80 bg-rose-50/40 shadow-rose-500/5"
-                        : "border-white shadow-card hover:shadow-glow"
-                    } ${e.status === "settled" ? "opacity-65 bg-slate-50/40" : ""}`}
+                    className="flex gap-3 border-b border-white/[0.05] p-4 transition-colors duration-150 last:border-0 hover:bg-white/[0.02] sm:gap-4 sm:p-5"
                   >
-                    {/* Type badge */}
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${
-                        e.type === "lend"
-                          ? "bg-blue-100/80 text-blue-600 border border-blue-200/60"
-                          : "bg-orange-100/80 text-orange-600 border border-orange-200/60"
+                      className={`icon-tile ${
+                        settled
+                          ? "bg-white/[0.06] text-slate-400"
+                          : lend
+                          ? "bg-income-500/15 text-income-400"
+                          : "bg-expense-500/15 text-expense-400"
                       }`}
                     >
-                      {e.type === "lend" ? <ArrowUpRight className="w-6 h-6 stroke-[2.5]" /> : <ArrowDownLeft className="w-6 h-6 stroke-[2.5]" />}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-slate-800 text-base">{e.person_name}</span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
-                            e.type === "lend" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
-                          }`}
-                        >
-                          {e.type === "lend" ? "You Lent" : "You Borrowed"}
-                        </span>
-                        {e.status === "settled" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" /> Settled
-                          </span>
-                        )}
-                        {overdue && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 animate-pulse">
-                            <AlertTriangle className="w-3 h-3" /> Overdue
-                          </span>
-                        )}
-                      </div>
-                      {e.note && <p className="text-sm font-medium text-slate-600 mt-1 truncate">{e.note}</p>}
-                      <div className="flex gap-4 mt-2 text-xs font-semibold text-slate-400 flex-wrap">
-                        <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {formatDate(e.date)}</span>
-                        {e.due_date && (
-                          <span className={`flex items-center gap-1 ${overdue ? "text-rose-600 font-bold" : ""}`}>
-                            <Clock className="w-3.5 h-3.5" /> Due: {formatDate(e.due_date)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-xl sm:text-2xl font-black ${e.type === "lend" ? "text-blue-600" : "text-orange-600"}`}>
-                        {formatCurrency(e.amount)}
-                      </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 flex-shrink-0">
-                      {e.status === "pending" && (
-                        <button
-                          onClick={() => settle(e.id)}
-                          className="flex items-center gap-1 px-3.5 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all active:scale-95 shadow-sm"
-                          title="Mark as Settled"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Settle</span>
-                        </button>
+                      {lend ? (
+                        <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
+                      ) : (
+                        <ArrowDownLeft className="h-5 w-5" aria-hidden="true" />
                       )}
-                      <button
-                        onClick={() => remove(e.id)}
-                        className="p-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all active:scale-95 shadow-sm"
-                        title="Delete Entry"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
-                  </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="break-words text-[15px] font-semibold text-white">{e.person_name}</span>
+                            <span className={lend ? "badge-income" : "badge-expense"}>
+                              {lend ? "You lent" : "You borrowed"}
+                            </span>
+                            {settled && (
+                              <span className="badge-neutral">
+                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> Settled
+                              </span>
+                            )}
+                          </div>
+                          {e.note && <p className="mt-1 break-words text-sm text-slate-400">{e.note}</p>}
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <p
+                            className={`amount text-base sm:text-lg ${
+                              settled ? "text-slate-400 line-through decoration-slate-600" : lend ? "text-income-400" : "text-expense-400"
+                            }`}
+                          >
+                            {formatCurrency(e.amount)}
+                          </p>
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            {settled ? "Settled" : lend ? "Owes you" : "You owe"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                            {formatDate(e.date)}
+                          </span>
+                          {e.due_date && (
+                            <span
+                              className={`inline-flex items-center gap-1.5 ${overdue ? "font-medium text-amber-400" : ""}`}
+                            >
+                              {overdue ? (
+                                <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                              ) : (
+                                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                              )}
+                              {overdue ? "Overdue · was due" : "Due"} {formatDate(e.due_date)}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {e.status === "pending" && (
+                            <button
+                              type="button"
+                              onClick={() => settle(e.id)}
+                              className="btn-secondary btn-sm"
+                              aria-label={`Mark entry with ${e.person_name} as settled`}
+                            >
+                              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                              Settle
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => remove(e.id)}
+                            className="btn-icon h-9 w-9 hover:bg-expense-500/10 hover:text-expense-400"
+                            aria-label={`Delete entry with ${e.person_name}`}
+                            title="Delete entry"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                 );
-              })
-            )}
+              })}
+            </ul>
+          )}
+        </section>
+      </main>
+
+      {/* Add entry dialog */}
+      {showForm && (
+        <div className="modal-backdrop" onMouseDown={(ev) => { if (ev.target === ev.currentTarget) setShowForm(false); }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lb-form-title"
+            className="modal-panel max-h-[92vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="lb-form-title" className="card-title">New entry</h2>
+                <p className="card-subtitle">Record money you lent or borrowed.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="btn-icon -mr-2 -mt-2"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <span className="label" id="lb-type-label">Type</span>
+                <div role="radiogroup" aria-labelledby="lb-type-label" className="segmented flex w-full">
+                  {["lend", "borrow"].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.type === t}
+                      onClick={() => setForm((p) => ({ ...p, type: t }))}
+                      className={`segmented-item inline-flex flex-1 items-center justify-center gap-1.5 ${
+                        form.type === t ? "segmented-item-active" : ""
+                      }`}
+                    >
+                      {t === "lend" ? (
+                        <ArrowUpRight className={`h-4 w-4 ${form.type === t ? "text-income-400" : ""}`} aria-hidden="true" />
+                      ) : (
+                        <ArrowDownLeft className={`h-4 w-4 ${form.type === t ? "text-expense-400" : ""}`} aria-hidden="true" />
+                      )}
+                      {t === "lend" ? "I lent money" : "I borrowed money"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="lb-person" className="label">
+                  {form.type === "lend" ? "Lent to" : "Borrowed from"}
+                </label>
+                <input
+                  id="lb-person"
+                  type="text"
+                  placeholder="Person’s name"
+                  value={form.person_name}
+                  onChange={set("person_name")}
+                  className="input"
+                  autoComplete="off"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lb-amount" className="label">Amount (₹)</label>
+                <input
+                  id="lb-amount"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={set("amount")}
+                  className="input tabular-nums"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lb-date" className="label">Date</label>
+                <input id="lb-date" type="date" value={form.date} onChange={set("date")} className="input" />
+              </div>
+
+              <div>
+                <label htmlFor="lb-due" className="label">
+                  Due date <span className="font-normal text-slate-500">(optional)</span>
+                </label>
+                <input id="lb-due" type="date" value={form.due_date} onChange={set("due_date")} className="input" />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="lb-note" className="label">
+                  Note <span className="font-normal text-slate-500">(optional)</span>
+                </label>
+                <input
+                  id="lb-note"
+                  type="text"
+                  placeholder="e.g. Dinner, rent split"
+                  value={form.note}
+                  onChange={set("note")}
+                  className="input"
+                />
+              </div>
+
+              <div className="mt-2 flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting} className="btn-primary">
+                  {submitting ? "Saving…" : "Save entry"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

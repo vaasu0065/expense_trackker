@@ -4,7 +4,8 @@ import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import api from "../api";
 import { EXPENSE_CATEGORIES } from "../constants";
-import { FileText, UploadCloud, CheckCircle, Trash2, Calendar, DollarSign, Sparkles, ArrowUpRight, ArrowDownRight, RefreshCw, Layers } from "lucide-react";
+import { FileText, UploadCloud, Trash2, ArrowUpRight, ArrowDownLeft, RefreshCw, Layers, Scale, ScanText, Eraser } from "lucide-react";
+import { todayLocal, parseDate } from "../utils/date";
 
 const sampleMessages = `Rs.250 debited from your account for UPI payment to SWIGGY on 18-May-2026 at 20:14.
 INR 1250.00 spent on HDFC Bank Card xx1234 at AMAZON on 17/05/2026.
@@ -13,7 +14,7 @@ Rs.55000 credited to your account via salary credit on 01-May-2026.
 INR 1200 received from RAHUL by UPI on 12/05/2026 at 10:45.`;
 
 function getToday() {
-  return new Date().toISOString().split("T")[0];
+  return todayLocal();
 }
 
 function pad(n) {
@@ -22,6 +23,13 @@ function pad(n) {
 
 function formatCurrency(n) {
   return `₹${(parseFloat(n) || 0).toLocaleString("en-IN")}`;
+}
+
+function formatLedgerDate(value) {
+  if (!value) return "—";
+  const d = parseDate(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function normalizeDate(value) {
@@ -244,7 +252,9 @@ export default function ImportTransactions() {
       const res = await api.post("/expenses/import", { transactions });
       const debitCount = res.data?.debitCount || 0;
       const creditCount = res.data?.creditCount || 0;
-      showToast(`${debitCount} debits and ${creditCount} credits imported`, "success");
+      const skipped = res.data?.skipped || 0;
+      const skippedNote = skipped ? ` (${skipped} already imported, skipped)` : "";
+      showToast(`${debitCount} debits and ${creditCount} credits imported${skippedNote}`, "success");
       setRawText("");
       setParsed([]);
       loadLedger();
@@ -255,305 +265,349 @@ export default function ImportTransactions() {
     }
   };
 
+  const net = Number(ledgerSummary?.net) || 0;
+  const periodLabel = new Date(Number(year) || new Date().getFullYear(), (Number(month) || 1) - 1, 1).toLocaleString("en", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} duration={toast.duration} />}
       <Navbar />
 
-      <div className="min-h-screen py-8 animate-fade-in">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Banner */}
-          <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-card relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-60 h-60 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-500/20 text-primary-300 border border-primary-500/30">
-                  <Sparkles className="w-3.5 h-3.5" /> AI parser & bulk importer
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                Bulk SMS & UPI Importer
-              </h1>
-              <p className="mt-1 text-slate-300 text-sm sm:text-base">
-                Paste raw SMS or UPI notification texts to automatically extract amounts, payees, and timestamps.
-              </p>
+      <main className="page">
+        <header className="page-header">
+          <div>
+            <h1 className="page-title">Import transactions</h1>
+            <p className="page-subtitle">Paste bank SMS or UPI notifications to add them to your ledger in bulk.</p>
+          </div>
+
+          {/* Period toolbar: drives the summary and the ledger below */}
+          <div role="group" aria-label="Ledger period" className="flex items-center gap-2">
+            <select
+              aria-label="Month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="select min-h-[40px] w-auto py-2 text-sm"
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i} value={i + 1}>
+                  {new Date(0, i).toLocaleString("en", { month: "long" })}
+                </option>
+              ))}
+            </select>
+            <input
+              aria-label="Year"
+              type="number"
+              inputMode="numeric"
+              min="2020"
+              max="2035"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="input min-h-[40px] w-24 py-2 text-sm tabular-nums"
+            />
+            <button
+              type="button"
+              onClick={loadLedger}
+              className="btn-icon border border-white/10 bg-ink-850 hover:bg-ink-800"
+              aria-label="Refresh ledger"
+              title="Refresh ledger"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </header>
+
+        {/* Summary */}
+        <section aria-label={`Summary for ${periodLabel}`} className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          <div className="kpi">
+            <div className="flex items-center justify-between gap-2">
+              <span className="kpi-label">Credited</span>
+              <ArrowDownLeft className="h-4 w-4 text-income-400" aria-hidden="true" />
             </div>
-          </header>
+            <p className="kpi-value text-income-400">+{formatCurrency(ledgerSummary?.total_credit)}</p>
+            <p className="kpi-hint">{periodLabel}</p>
+          </div>
+          <div className="kpi">
+            <div className="flex items-center justify-between gap-2">
+              <span className="kpi-label">Debited</span>
+              <ArrowUpRight className="h-4 w-4 text-expense-400" aria-hidden="true" />
+            </div>
+            <p className="kpi-value text-expense-400">−{formatCurrency(ledgerSummary?.total_debit)}</p>
+            <p className="kpi-hint">{periodLabel}</p>
+          </div>
+          <div className="kpi col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="kpi-label">Net cash flow</span>
+              <Scale className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            </div>
+            <p className={`kpi-value ${net > 0 ? "text-income-400" : net < 0 ? "text-expense-400" : ""}`}>
+              {net > 0 ? "+" : net < 0 ? "−" : ""}
+              {formatCurrency(Math.abs(net))}
+            </p>
+            <p className="kpi-hint">{net >= 0 ? "More in than out" : "More out than in"}</p>
+          </div>
+        </section>
 
-          <section className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Total Credited</span>
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/50 flex items-center justify-center text-emerald-600">
-                    <ArrowDownRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <p className="text-2xl font-black text-emerald-600">{formatCurrency(ledgerSummary?.total_credit)}</p>
-              </div>
+        {/* Paste */}
+        <section className="card card-pad mb-6" aria-labelledby="paste-title">
+          <div className="card-header mb-4">
+            <div>
+              <h2 id="paste-title" className="card-title">Paste messages</h2>
+              <p className="card-subtitle">We’ll pick out the amount, payee, date and time from each one.</p>
+            </div>
+          </div>
 
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Total Debited</span>
-                  <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200/50 flex items-center justify-center text-rose-600">
-                    <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <p className="text-2xl font-black text-rose-600">{formatCurrency(ledgerSummary?.total_debit)}</p>
-              </div>
+          <label htmlFor="sms-input" className="label">Messages</label>
+          <textarea
+            id="sms-input"
+            value={rawText}
+            onChange={(e) => setRawText(e.target.value)}
+            placeholder="Rs.250 debited from your account for UPI payment to SWIGGY on 18-May-2026"
+            aria-describedby="sms-hint"
+            spellCheck={false}
+            className="input min-h-[12rem] resize-y font-mono text-[13px] leading-relaxed sm:text-sm"
+          />
+          <p id="sms-hint" className="field-hint">One message per line. Nothing is saved until you review and import.</p>
 
-              <div className="glass-panel rounded-3xl p-5 border border-white shadow-card flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Net Cash Flow</span>
-                  <div className="w-8 h-8 rounded-xl bg-primary-50 border border-primary-200/50 flex items-center justify-center text-primary-600">
-                    <DollarSign className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                </div>
-                <p className={`text-2xl font-black ${(ledgerSummary?.net || 0) >= 0 ? "text-primary-600" : "text-rose-600"}`}>
-                  {formatCurrency(ledgerSummary?.net)}
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <button type="button" onClick={parse} className="btn-primary">
+              <ScanText className="h-4 w-4" aria-hidden="true" />
+              Parse messages
+            </button>
+            <button type="button" onClick={() => setRawText(sampleMessages)} className="btn-secondary">
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              Load samples
+            </button>
+            <button type="button" onClick={() => { setRawText(""); setParsed([]); }} className="btn-ghost">
+              <Eraser className="h-4 w-4" aria-hidden="true" />
+              Clear
+            </button>
+          </div>
+        </section>
+
+        {/* Review parsed rows */}
+        {parsed.length > 0 && (
+          <section className="card card-pad mb-6 animate-slide-up" aria-labelledby="review-title">
+            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 id="review-title" className="card-title">Review before importing</h2>
+                <p className="card-subtitle">
+                  {selectedCount} of {parsed.length} selected. Edit anything that looks wrong.
                 </p>
               </div>
-            </div>
-
-            <div className="glass-panel rounded-2xl p-4 border border-white shadow-sm flex flex-wrap items-center gap-3 bg-slate-50/60">
-              <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-wider">
-                <Calendar className="w-4 h-4 text-primary-600" />
-                <span>Filter Month/Year:</span>
-              </div>
-              <select
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-700 focus:ring-2 focus:ring-primary-500 shadow-sm outline-none"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i} value={i + 1}>
-                    {new Date(0, i).toLocaleString("en", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="2020"
-                max="2035"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="w-24 px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-700 focus:ring-2 focus:ring-primary-500 shadow-sm outline-none"
-              />
-              <button
-                type="button"
-                onClick={loadLedger}
-                className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 bg-white text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh</span>
+              <button type="button" onClick={importSelected} disabled={loading} className="btn-primary">
+                <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                {loading ? "Importing…" : `Import selected (${selectedCount})`}
               </button>
             </div>
+
+            <ul className="space-y-3">
+              {parsed.map((item, index) => {
+                const fid = (f) => `row-${item.id}-${f}`;
+                return (
+                  <li
+                    key={item.id}
+                    className={`rounded-xl border p-4 transition-colors duration-150 ${
+                      item.selected ? "border-white/10 bg-ink-850/60" : "border-white/[0.06] bg-transparent"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-start gap-3">
+                      <input
+                        id={fid("selected")}
+                        type="checkbox"
+                        checked={item.selected}
+                        onChange={(e) => updateRow(item.id, "selected", e.target.checked)}
+                        className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-brand-500"
+                      />
+                      <label htmlFor={fid("selected")} className="min-w-0 flex-1 cursor-pointer">
+                        <span className="block text-xs font-medium text-slate-400">
+                          Message {index + 1} · {item.selected ? "Will be imported" : "Skipped"}
+                        </span>
+                        <span className="mt-0.5 block break-words font-mono text-xs leading-relaxed text-slate-300">
+                          {item.source}
+                        </span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removeRow(item.id)}
+                        className="btn-icon -mr-2 -mt-2 hover:bg-expense-500/10 hover:text-expense-400"
+                        aria-label={`Remove message ${index + 1}`}
+                        title="Remove row"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+
+                    <div
+                      className={`grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-[8.5rem_minmax(0,1fr)_7.5rem_9rem_10rem_8.5rem] ${
+                        item.selected ? "" : "opacity-60"
+                      }`}
+                    >
+                      <div>
+                        <label htmlFor={fid("type")} className="mb-1 block text-xs font-medium text-slate-400">Type</label>
+                        <select
+                          id={fid("type")}
+                          value={item.type}
+                          onChange={(e) => updateRow(item.id, "type", e.target.value)}
+                          className={`select min-h-[40px] py-2 text-sm font-medium ${
+                            item.type === "credit" ? "text-income-300" : "text-expense-300"
+                          }`}
+                        >
+                          <option value="debit">Debit (−)</option>
+                          <option value="credit">Credit (+)</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2 row-start-1 md:col-span-1 md:row-start-auto">
+                        <label htmlFor={fid("title")} className="mb-1 block text-xs font-medium text-slate-400">Title / payee</label>
+                        <input
+                          id={fid("title")}
+                          value={item.title}
+                          onChange={(e) => updateRow(item.id, "title", e.target.value)}
+                          className="input min-h-[40px] py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={fid("amount")} className="mb-1 block text-xs font-medium text-slate-400">Amount (₹)</label>
+                        <input
+                          id={fid("amount")}
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(e) => updateRow(item.id, "amount", e.target.value)}
+                          className="input min-h-[40px] py-2 text-sm tabular-nums"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={fid("category")} className="mb-1 block text-xs font-medium text-slate-400">Category</label>
+                        <select
+                          id={fid("category")}
+                          value={item.category}
+                          onChange={(e) => updateRow(item.id, "category", e.target.value)}
+                          className="select min-h-[40px] py-2 text-sm"
+                        >
+                          {(EXPENSE_CATEGORIES.includes(item.category) ? EXPENSE_CATEGORIES : [item.category, ...EXPENSE_CATEGORIES]).map((category) => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor={fid("date")} className="mb-1 block text-xs font-medium text-slate-400">Date</label>
+                        <input
+                          id={fid("date")}
+                          type="date"
+                          value={item.date}
+                          onChange={(e) => updateRow(item.id, "date", e.target.value)}
+                          className="input min-h-[40px] py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={fid("time")} className="mb-1 block text-xs font-medium text-slate-400">Time</label>
+                        <input
+                          id={fid("time")}
+                          type="time"
+                          value={item.time}
+                          onChange={(e) => updateRow(item.id, "time", e.target.value)}
+                          className="input min-h-[40px] py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
+        )}
 
-          <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary-600" />
-                <h2 className="text-lg font-black text-slate-800 tracking-tight">Paste Payment SMS / Notifications</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setRawText(sampleMessages)}
-                className="px-4 py-2 text-xs font-extrabold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-xl transition-all border border-primary-200 active:scale-95 shadow-sm"
-              >
-                + Load Sample Messages
-              </button>
+        {/* Ledger */}
+        <section className="card" aria-labelledby="ledger-title">
+          <div className="flex items-start gap-3 border-b border-white/[0.08] p-5 sm:p-6">
+            <div>
+              <h2 id="ledger-title" className="card-title">Ledger</h2>
+              <p className="card-subtitle">
+                Imported transactions · {periodLabel}
+                {ledger.length > 0 ? ` · ${ledger.length} ${ledger.length === 1 ? "entry" : "entries"}` : ""}
+              </p>
             </div>
+          </div>
 
-            <textarea
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder="Paste one transaction message per line (e.g., Rs.250 debited from your account for UPI payment to SWIGGY on 18-May-2026)..."
-              className="w-full min-h-48 px-4 py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl font-mono text-xs sm:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-y transition-all shadow-inner"
-            />
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={parse}
-                className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-primary-600 to-teal-600 hover:from-primary-700 hover:to-teal-700 text-white font-extrabold rounded-2xl shadow-card hover:shadow-glow transition-all active:scale-95 text-sm"
-              >
-                <UploadCloud className="w-4 h-4" />
-                <span>Parse & Extract Data</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setRawText(""); setParsed([]); }}
-                className="px-6 py-3.5 border border-slate-200/80 bg-white text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all shadow-sm active:scale-95 text-sm"
-              >
-                Clear Text
-              </button>
-            </div>
-          </section>
-
-          {parsed.length > 0 && (
-            <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card mb-8 animate-slide-up">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-5">
-                <div>
-                  <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> Review & Confirm Extraction
-                  </h2>
-                  <p className="text-xs font-semibold text-slate-500 mt-0.5">Check off rows and edit details before saving to your master ledger.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={importSelected}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold rounded-2xl shadow-card hover:shadow-glow transition-all disabled:opacity-50 active:scale-95 text-sm"
-                >
-                  <UploadCloud className="w-4 h-4" />
-                  <span>{loading ? "Importing Selected…" : `Import Selected (${selectedCount})`}</span>
-                </button>
+          {ledger.length === 0 ? (
+            <div className="empty-state">
+              <div className="icon-tile mb-2 bg-white/[0.06] text-slate-400">
+                <Layers className="h-5 w-5" aria-hidden="true" />
               </div>
-
-              <div className="overflow-x-auto -mx-2">
-                <table className="w-full text-left text-sm border-collapse">
+              <p className="text-base font-medium text-slate-200">No imported transactions</p>
+              <p className="max-w-sm">Nothing was imported for {periodLabel}. Paste messages above or pick another month.</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="table">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/80">
-                      {["Select", "Type", "Title / Payee", "Amount (₹)", "Category", "Date", "Time", "Action"].map((h, i) => (
-                        <th key={`${h}-${i}`} className="px-3.5 py-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                          {h}
-                        </th>
-                      ))}
+                    <tr>
+                      <th scope="col" className="!pl-6">Type</th>
+                      <th scope="col">Title / payee</th>
+                      <th scope="col">Category</th>
+                      <th scope="col">Date</th>
+                      <th scope="col">Time</th>
+                      <th scope="col" className="!pr-6 text-right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {parsed.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors align-middle">
-                        <td className="px-3.5 py-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={item.selected}
-                            onChange={(e) => updateRow(item.id, "selected", e.target.checked)}
-                            className="w-4 h-4 rounded accent-primary-600 cursor-pointer"
-                          />
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-32">
-                          <select
-                            value={item.type}
-                            onChange={(e) => updateRow(item.id, "type", e.target.value)}
-                            className={`w-full px-3 py-1.5 border rounded-xl font-bold text-xs bg-white focus:ring-2 focus:ring-primary-500 outline-none shadow-sm ${
-                              item.type === "credit" ? "border-emerald-200 text-emerald-700 bg-emerald-50/50" : "border-rose-200 text-rose-600 bg-rose-50/50"
-                            }`}
-                          >
-                            <option value="debit">Debit (-)</option>
-                            <option value="credit">Credit (+)</option>
-                          </select>
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-56">
-                          <input
-                            value={item.title}
-                            onChange={(e) => updateRow(item.id, "title", e.target.value)}
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-xl font-bold text-xs text-slate-800 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm bg-white"
-                          />
-                          <p className="mt-1 text-[11px] font-medium text-slate-400 line-clamp-1 italic">{item.source}</p>
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-32">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.amount}
-                            onChange={(e) => updateRow(item.id, "amount", e.target.value)}
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-xl font-black text-xs text-slate-800 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm bg-white"
-                          />
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-40">
-                          <select
-                            value={item.category}
-                            onChange={(e) => updateRow(item.id, "category", e.target.value)}
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-xl font-bold text-xs text-slate-700 bg-white focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
-                          >
-                            {EXPENSE_CATEGORIES.map((category) => (
-                              <option key={category} value={category}>{category}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-40">
-                          <input
-                            type="date"
-                            value={item.date}
-                            onChange={(e) => updateRow(item.id, "date", e.target.value)}
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-xl font-semibold text-xs text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm bg-white"
-                          />
-                        </td>
-                        <td className="px-3.5 py-3.5 min-w-28">
-                          <input
-                            type="time"
-                            value={item.time}
-                            onChange={(e) => updateRow(item.id, "time", e.target.value)}
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-xl font-semibold text-xs text-slate-700 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm bg-white"
-                          />
-                        </td>
-                        <td className="px-3.5 py-3.5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => removeRow(item.id)}
-                            className="p-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all active:scale-95 shadow-sm"
-                            title="Remove row"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody>
+                    {ledger.map((item) => {
+                      const credit = item.type === "credit";
+                      return (
+                        <tr key={item.id}>
+                          <td className="!pl-6">
+                            <span className={credit ? "badge-income" : "badge-expense"}>
+                              {credit ? "+ Credit" : "− Debit"}
+                            </span>
+                          </td>
+                          <td className="max-w-[18rem] truncate font-medium text-white" title={item.title}>{item.title}</td>
+                          <td className="text-slate-300">{item.category}</td>
+                          <td className="whitespace-nowrap tabular-nums text-slate-300">{formatLedgerDate(item.date)}</td>
+                          <td className="tabular-nums text-slate-400">{item.time || "—"}</td>
+                          <td className={`!pr-6 whitespace-nowrap text-right ${credit ? "amount-in" : "amount-out"}`}>
+                            {credit ? "+" : "−"}{formatCurrency(item.amount)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-            </section>
+
+              {/* Mobile list */}
+              <ul className="md:hidden">
+                {ledger.map((item) => {
+                  const credit = item.type === "credit";
+                  return (
+                    <li key={item.id} className="flex items-start gap-3 border-b border-white/[0.05] px-5 py-4 last:border-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-[15px] font-medium text-white">{item.title}</p>
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {item.category} · {formatLedgerDate(item.date)}
+                          {item.time ? ` · ${item.time}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className={`text-[15px] ${credit ? "amount-in" : "amount-out"}`}>
+                          {credit ? "+" : "−"}{formatCurrency(item.amount)}
+                        </span>
+                        <span className={credit ? "badge-income" : "badge-expense"}>{credit ? "Credit" : "Debit"}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
-
-          <section className="glass-panel rounded-3xl p-6 sm:p-8 border border-white shadow-card">
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
-              <Layers className="w-5 h-5 text-primary-600" />
-              <h2 className="text-xl font-black text-slate-800 tracking-tight">Monthly Transaction Ledger History</h2>
-            </div>
-            {ledger.length === 0 ? (
-              <div className="py-16 text-center bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 text-slate-500 font-medium">
-                No imported transactions for this selected month.
-              </div>
-            ) : (
-              <div className="overflow-x-auto -mx-2">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/80">
-                      {["Type", "Title / Payee", "Amount (₹)", "Category", "Date", "Time"].map((h) => (
-                        <th key={h} className="px-3.5 py-3 text-[11px] font-black text-slate-500 uppercase tracking-wider">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {ledger.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-3.5 py-3">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
-                            item.type === "credit" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-rose-100 text-rose-700 border border-rose-200"
-                          }`}>
-                            {item.type === "credit" ? "Credit (+)" : "Debit (-)"}
-                          </span>
-                        </td>
-                        <td className="px-3.5 py-3 font-extrabold text-slate-800 text-sm">{item.title}</td>
-                        <td className={`px-3.5 py-3 font-black text-base ${item.type === "credit" ? "text-emerald-600" : "text-rose-600"}`}>
-                          {item.type === "credit" ? "+" : "-"}{formatCurrency(item.amount)}
-                        </td>
-                        <td className="px-3.5 py-3 text-xs font-bold text-slate-600">{item.category}</td>
-                        <td className="px-3.5 py-3 text-xs font-semibold text-slate-600">{item.date}</td>
-                        <td className="px-3.5 py-3 text-xs font-semibold text-slate-400">{item.time || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
+        </section>
+      </main>
     </>
   );
 }
