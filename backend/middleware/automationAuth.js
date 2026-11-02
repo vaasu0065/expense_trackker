@@ -2,9 +2,12 @@ const auth = require("./authMiddleware");
 const { findUserByKey, KEY_PREFIX } = require("../controllers/automationKeyController");
 
 // Accepts either a normal login token or an automation key ("etk_…").
-// Used only on routes an automation is allowed to call.
+// Used only on routes an automation is allowed to call. The key may also come
+// as ?key=… so iPhone Shortcuts needs no header (a stray space in a typed
+// header name makes the HTTP/2 request fail with "network connection lost").
 module.exports = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const queryKey = typeof req.query.key === "string" ? req.query.key.trim() : "";
+  const token = req.headers.authorization?.split(" ")[1] || queryKey;
   if (!token?.startsWith(KEY_PREFIX)) return auth(req, res, next);
 
   try {

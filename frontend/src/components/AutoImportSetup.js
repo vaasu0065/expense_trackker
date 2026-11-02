@@ -172,10 +172,16 @@ export default function AutoImportSetup({ showToast }) {
               <AlertTriangle className="h-4 w-4" aria-hidden />
               Copy this now. For your security it won't be shown again.
             </p>
-            <CopyField id="auth-header" label="Authorization header value" value={`Bearer ${newKey}`} onCopy={copy} copiedId={copiedId} />
+            <CopyField id="endpoint-key" label="URL with your key" value={`${endpoint}?key=${newKey}`} onCopy={copy} copiedId={copiedId} />
           </div>
         )}
-        <CopyField id="endpoint" label="URL" value={endpoint} onCopy={copy} copiedId={copiedId} />
+        {!newKey && (
+          <p className="text-sm text-stone-400">
+            {key
+              ? "Lost the URL? Tap Replace key to get a new one, then paste it into your automation."
+              : "Create a key to get the URL for your automation."}
+          </p>
+        )}
       </div>
 
       {/* Steps */}
@@ -184,9 +190,9 @@ export default function AutoImportSetup({ showToast }) {
         {[
           <>Open the <strong className="text-white">Shortcuts</strong> app, go to <strong className="text-white">Automation</strong>, tap <strong className="text-white">+</strong> and choose <strong className="text-white">Message</strong>.</>,
           <>Set <strong className="text-white">Message Contains</strong> to <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">debited</code> (optionally pick your bank as the sender). Choose <strong className="text-white">Run Immediately</strong>, then <strong className="text-white">Next</strong>.</>,
-          <>Create a <strong className="text-white">New Blank Automation</strong> and add the action <strong className="text-white">Get Contents of URL</strong>. Paste the URL above.</>,
-          <>Tap the arrow to show more. Set <strong className="text-white">Method</strong> to POST. Add a header named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">Authorization</code> with the header value from this page.</>,
-          <>Set <strong className="text-white">Request Body</strong> to JSON, add a Text field named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">message</code>, and set its value to the <strong className="text-white">Shortcut Input</strong> variable (the message content).</>,
+          <>Create a <strong className="text-white">New Blank Automation</strong> and add the action <strong className="text-white">Get Contents of URL</strong>. Paste the URL with your key from above.</>,
+          <>Tap the arrow to show more. Set <strong className="text-white">Method</strong> to POST. Leave <strong className="text-white">Headers</strong> empty.</>,
+          <>Set <strong className="text-white">Request Body</strong> to JSON, add a Text field named <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">message</code>, and set its value to <strong className="text-white">Shortcut Input › Content</strong> (the message text).</>,
           <>Tap <strong className="text-white">Done</strong>. Repeat with <code className="rounded bg-ink-850 px-1.5 py-0.5 font-mono text-stone-100">credited</code> to import incoming money too. When a bank SMS arrives, <strong className="text-white">Last used</strong> above updates and the transaction appears in your ledger.</>,
         ].map((step, i) => (
           <li key={i} className="flex gap-3">
