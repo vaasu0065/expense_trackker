@@ -118,7 +118,7 @@ export default function Charts() {
             id="chart-month"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="select min-h-[40px] w-auto py-2 text-sm"
+            className="select min-h-[40px] w-auto py-2 text-base sm:text-sm"
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i} value={i + 1}>

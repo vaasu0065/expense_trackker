@@ -202,7 +202,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                 <input
                   id="ledger-date"
                   type="date"
-                  className="input min-h-[40px] py-2 text-sm tabular-nums"
+                  className="input min-h-[40px] py-2 text-base sm:text-sm tabular-nums"
                   value={selectedDate || ""}
                   onChange={(e) => setSelectedDate && setSelectedDate(e.target.value)}
                 />
@@ -226,7 +226,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                 id="ledger-category"
                 value={filters.category || ""}
                 onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value || undefined }))}
-                className="select min-h-[40px] py-2 text-sm"
+                className="select min-h-[40px] py-2 text-base sm:text-sm"
               >
                 <option value="">All categories</option>
                 {categories.map((cat) => (
@@ -243,7 +243,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                 id="ledger-month"
                 value={filters.month || ""}
                 onChange={(e) => setFilters((p) => ({ ...p, month: e.target.value || undefined }))}
-                className="select min-h-[40px] py-2 text-sm"
+                className="select min-h-[40px] py-2 text-base sm:text-sm"
               >
                 <option value="">All months</option>
                 {Array.from({ length: 12 }, (_, i) => (
@@ -262,7 +262,7 @@ export default function ExpenseList({ filters, setFilters, selectedDate, setSele
                 id="ledger-sort"
                 value={filters.sort || ""}
                 onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value || undefined }))}
-                className="select min-h-[40px] py-2 text-sm"
+                className="select min-h-[40px] py-2 text-base sm:text-sm"
               >
                 <option value="">Default</option>
                 <option value="newest">Newest first</option>

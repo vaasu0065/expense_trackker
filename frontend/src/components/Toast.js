@@ -18,7 +18,7 @@ export default function Toast({ message, type = "success", onClose, duration = 4
 
   return (
     <div
-      className="fixed inset-x-4 top-4 z-[200] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end"
+      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+1rem)] z-[200] flex justify-center sm:inset-x-auto sm:right-5 sm:top-[calc(env(safe-area-inset-top)+1.25rem)] sm:justify-end"
       role={type === "error" ? "alert" : "status"}
       aria-live={type === "error" ? "assertive" : "polite"}
     >

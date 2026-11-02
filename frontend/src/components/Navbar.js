@@ -80,7 +80,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-ink-950/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-ink-950/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Brand */}
           <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-xl text-white">

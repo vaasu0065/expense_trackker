@@ -74,7 +74,7 @@ export default function Login() {
         />
       )}
 
-      <main className="flex min-h-screen items-center justify-center px-4 py-10 animate-fade-in">
+      <main className="flex min-h-screen items-center justify-center px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))] animate-fade-in">
         <div className="w-full max-w-md">
           <div className="mb-6 flex items-center justify-center gap-2.5 text-white">
             <span className="brand-mark h-10 w-10">

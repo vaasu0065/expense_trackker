@@ -143,7 +143,7 @@
     @apply mb-1.5 block text-sm font-medium text-stone-300;
   }
   .input {
-    @apply block w-full min-h-[44px] rounded-xl border border-white/10 bg-ink-850 px-3.5 py-2.5 text-[15px] text-white placeholder:text-stone-500 transition-colors duration-150 hover:border-white/20 focus:border-brand-400/70 focus:bg-ink-800 focus:outline-none focus:ring-4 focus:ring-brand-400/15 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply block w-full min-h-[44px] rounded-xl border border-white/10 bg-ink-850 px-3.5 py-2.5 text-base text-white sm:text-[15px] placeholder:text-stone-500 transition-colors duration-150 hover:border-white/20 focus:border-brand-400/70 focus:bg-ink-800 focus:outline-none focus:ring-4 focus:ring-brand-400/15 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .select {
     @apply input pr-9;
@@ -244,7 +244,7 @@
     @apply fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm animate-fade-in sm:items-center sm:p-4;
   }
   .modal-panel {
-    @apply card w-full max-w-lg rounded-b-none p-6 shadow-pop animate-slide-up sm:rounded-2xl;
+    @apply card max-h-[calc(100dvh-env(safe-area-inset-top)-1rem)] w-full max-w-lg overflow-y-auto rounded-b-none p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-pop animate-slide-up sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:pb-6;
   }
 }
 

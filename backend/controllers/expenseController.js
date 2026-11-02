@@ -1,7 +1,7 @@
 const pool = require("../config/db");
 const { Parser } = require("json2csv");
 const ExcelJS = require("exceljs");
-const { parseTransactionMessage } = require("../utils/transactionParser");
+const { parseTransactionMessage, splitMessages } = require("../utils/transactionParser");
 
 const ensureTransactionTable = async () => {
   await pool.query(`
@@ -196,6 +196,15 @@ exports.importExpenses = async (req, res) => {
     console.error(err);
     res.status(err.statusCode || 500).json({ msg: err.statusCode ? err.message : "Server Error" });
   }
+};
+
+/* PARSE PASTED MESSAGES (preview only, nothing is saved) */
+exports.parseMessages = (req, res) => {
+  const messages = splitMessages(req.body.text);
+  if (messages.length > 200) {
+    return res.status(400).json({ msg: "Paste at most 200 messages at a time" });
+  }
+  res.json({ transactions: messages.map(parseTransactionMessage) });
 };
 
 /* AUTO IMPORT RAW TRANSACTION MESSAGE(S) */

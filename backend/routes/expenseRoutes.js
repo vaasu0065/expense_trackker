@@ -5,6 +5,7 @@ const {
   addExpense,
   importExpenses,
   autoImportTransaction,
+  parseMessages,
   getExpenses,
   monthlyStats,
   summary,
@@ -24,6 +25,7 @@ const router = express.Router();
 
 router.post("/add", auth, addExpense);
 router.post("/import", auth, importExpenses);
+router.post("/parse", auth, parseMessages);
 router.post("/auto-import", automationAuth, autoImportTransaction);
 router.get("/transactions", auth, getImportedTransactions);
 router.get("/", auth, getExpenses);

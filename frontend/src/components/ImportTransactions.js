@@ -6,21 +6,13 @@ import useToast from "../hooks/useToast";
 import api from "../api";
 import { EXPENSE_CATEGORIES } from "../constants";
 import { FileText, UploadCloud, Trash2, ArrowUpRight, ArrowDownLeft, RefreshCw, Layers, Scale, ScanText, Eraser } from "lucide-react";
-import { todayLocal, parseDate } from "../utils/date";
+import { parseDate } from "../utils/date";
 
 const sampleMessages = `Rs.250 debited from your account for UPI payment to SWIGGY on 18-May-2026 at 20:14.
 INR 1250.00 spent on HDFC Bank Card xx1234 at AMAZON on 17/05/2026.
 Your a/c is debited by Rs 80 for UPI payment to METRO RAIL on 16-05-2026.
 Rs.55000 credited to your account via salary credit on 01-May-2026.
 INR 1200 received from RAHUL by UPI on 12/05/2026 at 10:45.`;
-
-function getToday() {
-  return todayLocal();
-}
-
-function pad(n) {
-  return String(n).padStart(2, "0");
-}
 
 function formatCurrency(n) {
   return `₹${(parseFloat(n) || 0).toLocaleString("en-IN")}`;
@@ -33,147 +25,6 @@ function formatLedgerDate(value) {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function normalizeDate(value) {
-  if (!value) return getToday();
-
-  const clean = value.replace(/,/g, "").trim();
-  const monthMap = {
-    jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
-    jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
-  };
-
-  let match = clean.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/);
-  if (match) {
-    const year = match[3].length === 2 ? `20${match[3]}` : match[3];
-    return `${year}-${pad(match[2])}-${pad(match[1])}`;
-  }
-
-  match = clean.match(/^(\d{1,2})[-\s]([A-Za-z]{3,9})[-\s](\d{2,4})$/);
-  if (match) {
-    const year = match[3].length === 2 ? `20${match[3]}` : match[3];
-    const month = monthMap[match[2].slice(0, 3).toLowerCase()];
-    if (month) return `${year}-${month}-${pad(match[1])}`;
-  }
-
-  match = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-  if (match) return `${match[1]}-${pad(match[2])}-${pad(match[3])}`;
-
-  return getToday();
-}
-
-function guessCategory(text) {
-  const lower = text.toLowerCase();
-  if (guessType(text) === "credit") {
-    if (lower.includes("salary")) return "Income";
-    if (lower.includes("refund")) return "Refund";
-    return "Income";
-  }
-
-  const rules = [
-    ["Food", ["swiggy", "zomato", "restaurant", "cafe", "food", "pizza", "burger"]],
-    ["Travel", ["uber", "ola", "metro", "rail", "irctc", "fuel", "petrol", "diesel", "rapido"]],
-    ["Shopping", ["amazon", "flipkart", "myntra", "shopping", "store", "mart"]],
-    ["Bills", ["electricity", "bill", "recharge", "broadband", "airtel", "jio", "vi ", "gas"]],
-    ["Health", ["pharmacy", "medical", "hospital", "doctor", "clinic"]],
-    ["Entertainment", ["netflix", "prime", "hotstar", "movie", "bookmyshow", "spotify"]],
-    ["Education", ["course", "school", "college", "tuition", "exam"]],
-  ];
-
-  const match = rules.find(([, words]) => words.some((word) => lower.includes(word)));
-  return match?.[0] || "Other";
-}
-
-function guessType(text) {
-  const lower = text.toLowerCase();
-  const creditWords = ["credited", "credit", "received", "deposited", "refund", "salary", "cashback"];
-  const debitWords = ["debited", "debit", "spent", "paid", "payment", "withdrawn", "purchase"];
-
-  const hasCredit = creditWords.some((word) => lower.includes(word));
-  const hasDebit = debitWords.some((word) => lower.includes(word));
-
-  if (hasCredit && !hasDebit) return "credit";
-  return "debit";
-}
-
-function extractAmount(text) {
-  const patterns = [
-    /(?:rs\.?|inr|₹)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i,
-    /(?:debited|credited|spent|paid|payment|purchase|withdrawn|received|deposited|refund)\D{0,20}([0-9][0-9,]*(?:\.\d{1,2})?)/i,
-    /([0-9][0-9,]*(?:\.\d{1,2})?)\s*(?:rs\.?|inr)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return parseFloat(match[1].replace(/,/g, ""));
-  }
-
-  return 0;
-}
-
-function extractDate(text) {
-  const patterns = [
-    /\b(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})\b/,
-    /\b(\d{1,2}[-\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*[-\s]\d{2,4})\b/i,
-    /\b(\d{4}[-/]\d{1,2}[-/]\d{1,2})\b/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) return normalizeDate(match[1]);
-  }
-
-  return getToday();
-}
-
-function extractTime(text) {
-  const match = text.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
-  return match ? `${pad(match[1])}:${match[2]}` : "";
-}
-
-function extractTitle(text) {
-  const patterns = [
-    /(?:upi payment to|paid to|payment to|transferred to)\s+([A-Za-z0-9 .&_-]+)/i,
-    /(?:received from|credited from|from)\s+([A-Za-z0-9 .&_-]+?)(?:\s+by|\s+via|\s+on|\.|$)/i,
-    /(?:salary credit|salary)/i,
-    /(?:at|towards)\s+([A-Za-z0-9 .&_-]+?)(?:\s+on|\s+dt|\s+for|\.|$)/i,
-    /(?:merchant|payee)\s*[:-]\s*([A-Za-z0-9 .&_-]+)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (pattern.source.includes("salary") && match) return "Salary";
-    if (match?.[1]) {
-      return match[1]
-        .replace(/\b(on|at|ref|txn|upi|debited|credited)\b.*$/i, "")
-        .trim()
-        .slice(0, 60);
-    }
-  }
-
-  return "Imported transaction";
-}
-
-function parseMessages(input) {
-  return input
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((message, index) => {
-      const amount = extractAmount(message);
-      return {
-        id: `${Date.now()}-${index}`,
-        title: extractTitle(message),
-        amount: amount ? String(amount) : "",
-        type: guessType(message),
-        category: guessCategory(message),
-        date: extractDate(message),
-        time: extractTime(message),
-        source: message,
-        selected: amount > 0,
-      };
-    });
-}
-
 export default function ImportTransactions() {
   const [rawText, setRawText] = useState("");
   const [parsed, setParsed] = useState([]);
@@ -182,6 +33,7 @@ export default function ImportTransactions() {
   const [month, setMonth] = useState(String(new Date().getMonth() + 1));
   const [year, setYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
   const selectedCount = useMemo(
@@ -204,14 +56,34 @@ export default function ImportTransactions() {
     loadLedger();
   }, [loadLedger]);
 
-  const parse = () => {
-    const results = parseMessages(rawText);
-    setParsed(results);
-    if (results.length === 0) {
+  // Parsing happens on the server so pasted messages are read exactly like
+  // the ones the iPhone automation sends.
+  const parse = async () => {
+    if (!rawText.trim()) {
       showToast("Paste at least one transaction message", "warning");
       return;
     }
-    showToast(`Found ${results.length} possible transaction${results.length === 1 ? "" : "s"}`, "success");
+    setParsing(true);
+    try {
+      const res = await api.post("/expenses/parse", { text: rawText });
+      const results = (res.data?.transactions || []).map((item, index) => ({
+        ...item,
+        id: `${Date.now()}-${index}`,
+        amount: item.amount ? String(item.amount) : "",
+        selected: item.amount > 0,
+      }));
+      setParsed(results);
+      const found = results.filter((item) => item.selected).length;
+      if (found === 0) {
+        showToast("Couldn't find an amount in these messages. Check they're bank SMS.", "warning");
+        return;
+      }
+      showToast(`Found ${found} transaction${found === 1 ? "" : "s"}`, "success");
+    } catch (err) {
+      showToast(err.response?.data?.msg || "Couldn't read these messages. Try again.", "error");
+    } finally {
+      setParsing(false);
+    }
   };
 
   const updateRow = (id, field, value) => {
@@ -290,7 +162,7 @@ export default function ImportTransactions() {
               aria-label="Month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="select min-h-[40px] w-auto py-2 text-sm"
+              className="select min-h-[40px] w-auto py-2 text-base sm:text-sm"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i + 1}>
@@ -306,7 +178,7 @@ export default function ImportTransactions() {
               max="2035"
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="input min-h-[40px] w-24 py-2 text-sm tabular-nums"
+              className="input min-h-[40px] w-24 py-2 text-base sm:text-sm tabular-nums"
             />
             <button
               type="button"
@@ -368,14 +240,14 @@ export default function ImportTransactions() {
             placeholder="Rs.250 debited from your account for UPI payment to SWIGGY on 18-May-2026"
             aria-describedby="sms-hint"
             spellCheck={false}
-            className="input min-h-[12rem] resize-y font-mono text-[13px] leading-relaxed sm:text-sm"
+            className="input min-h-[12rem] resize-y font-mono text-base leading-relaxed sm:text-sm"
           />
-          <p id="sms-hint" className="field-hint">One message per line. Nothing is saved until you review and import.</p>
+          <p id="sms-hint" className="field-hint">Paste one or more bank SMS. Multi-line messages are kept together. Nothing is saved until you review and import.</p>
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <button type="button" onClick={parse} className="btn-primary">
+            <button type="button" onClick={parse} disabled={parsing} aria-busy={parsing} className="btn-primary">
               <ScanText className="h-4 w-4" aria-hidden="true" />
-              Parse messages
+              {parsing ? "Reading…" : "Parse messages"}
             </button>
             <button type="button" onClick={() => setRawText(sampleMessages)} className="btn-secondary">
               <FileText className="h-4 w-4" aria-hidden="true" />
@@ -466,7 +338,7 @@ export default function ImportTransactions() {
                           id={fid("title")}
                           value={item.title}
                           onChange={(e) => updateRow(item.id, "title", e.target.value)}
-                          className="input min-h-[40px] py-2 text-sm"
+                          className="input min-h-[40px] py-2 text-base sm:text-sm"
                         />
                       </div>
                       <div>
@@ -479,7 +351,7 @@ export default function ImportTransactions() {
                           step="0.01"
                           value={item.amount}
                           onChange={(e) => updateRow(item.id, "amount", e.target.value)}
-                          className="input min-h-[40px] py-2 text-sm tabular-nums"
+                          className="input min-h-[40px] py-2 text-base sm:text-sm tabular-nums"
                         />
                       </div>
                       <div>
@@ -488,7 +360,7 @@ export default function ImportTransactions() {
                           id={fid("category")}
                           value={item.category}
                           onChange={(e) => updateRow(item.id, "category", e.target.value)}
-                          className="select min-h-[40px] py-2 text-sm"
+                          className="select min-h-[40px] py-2 text-base sm:text-sm"
                         >
                           {(EXPENSE_CATEGORIES.includes(item.category) ? EXPENSE_CATEGORIES : [item.category, ...EXPENSE_CATEGORIES]).map((category) => (
                             <option key={category} value={category}>{category}</option>
@@ -502,7 +374,7 @@ export default function ImportTransactions() {
                           type="date"
                           value={item.date}
                           onChange={(e) => updateRow(item.id, "date", e.target.value)}
-                          className="input min-h-[40px] py-2 text-sm"
+                          className="input min-h-[40px] py-2 text-base sm:text-sm"
                         />
                       </div>
                       <div>
@@ -512,7 +384,7 @@ export default function ImportTransactions() {
                           type="time"
                           value={item.time}
                           onChange={(e) => updateRow(item.id, "time", e.target.value)}
-                          className="input min-h-[40px] py-2 text-sm"
+                          className="input min-h-[40px] py-2 text-base sm:text-sm"
                         />
                       </div>
                     </div>
